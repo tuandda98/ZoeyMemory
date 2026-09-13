@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # Update all three tools on this machine: superpowers, ZoeyMemory, openspec CLI.
 # If run inside a repo that has openspec/, also regenerates that repo's OpenSpec command files.
-# Safe to re-run. Plugin updates need a Claude Code restart (or /reload-plugins) to take effect.
+# This is the ONLY script that talks to the network. Safe to re-run. Plugin updates need a Claude
+# Code restart (or /reload-plugins) to take effect.
 #
 # Usage: bash update.sh
 set -uo pipefail
 
-command -v claude >/dev/null 2>&1 || { echo "ERROR: Claude Code CLI not found"; exit 1; }
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "$HERE/lib/common.sh"
+
+command -v claude >/dev/null 2>&1 || { echo "ERROR Claude Code CLI not found"; exit 1; }
 
 echo "# 1/4 marketplaces"
 claude plugin marketplace update 2>&1 | tail -3
@@ -24,7 +28,7 @@ else
 fi
 
 echo "# 4/4 this repo"
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+ROOT="$(zoey_resolve_root)"
 if [ -d "$ROOT/openspec" ] && command -v openspec >/dev/null 2>&1; then
   (cd "$ROOT" && openspec update . 2>&1 | tail -2) && echo "OK    regenerated OpenSpec command files in $ROOT (commit .claude/commands and .claude/skills if they changed)"
 else

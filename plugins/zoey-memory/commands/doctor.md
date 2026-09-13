@@ -1,7 +1,7 @@
 ---
 description: Health check - detect drift between ZoeyMemory, OpenSpec and superpowers after any of them was updated, and fix what is safe
 ---
-Run the read-only health check and act on it:
+Run the read-only, offline health check and act on it:
 
 ```
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.sh"

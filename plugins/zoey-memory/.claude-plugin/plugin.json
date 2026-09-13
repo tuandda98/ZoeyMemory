@@ -1,7 +1,7 @@
 {
   "name": "zoey-memory",
   "description": "ZoeyMemory: memory across sessions. Hooks log every user prompt to docs/memory/, load context at session start (recent prompts, last session note, open OpenSpec changes, git log), and auto-pull when safe. Run /zoey-memory:init in a new repo to enable.",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "author": {
     "name": "Do Dao Anh Tuan"
   }

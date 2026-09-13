@@ -1,16 +1,22 @@
 {
-  "_": "Runtime strings for language `vi` (Vietnamese). Keys missing here fall back to en.json.",
+  "_": "Runtime strings for language `vi` (Vietnamese). Keys missing or broken here fall back to en.json. Keep {placeholders} exactly as they are. In sessions_header the example entry MUST stay indented (4 spaces).",
 
-  "prompts_header": "# Nhật ký câu hỏi (tự động)\n\nHook `log-prompt.sh` của ZoeyMemory tự ghi: một mốc mỗi phiên cộng từng câu chủ dự án nhắn.\nFile này ĐƯỢC COMMIT để máy kia biết máy này vừa được nhờ làm gì.\n\nĐừng sửa tay phần tự động. Muốn ghi KẾT QUẢ một việc thì thêm dòng bắt đầu bằng `> `\nngay dưới câu tương ứng. LÝ DO của quyết định thì ghi ở OpenSpec (`openspec/changes/<tên>/`).\n",
-  "sessions_header": "# Nhật ký phiên\n\nMỗi lần rời máy (`/zoey-memory:handoff`) thêm MỘT mục mới ở cuối, theo khuôn:\n\n## YYYY-MM-DD HH:MM - nhánh `main` - máy <tên máy>\n- Đang dở: ...\n- Vì sao dừng: ...\n- Chờ ai quyết gì: ...\n- Máy kia cần biết (thứ không đi theo git): ...\n\nHook `session-start.sh` nạp mục MỚI NHẤT vào phiên sau. Đừng chép lại `git log` -\ncommit trả lời \"đã đổi gì\", mục này trả lời \"vì sao, và tiếp theo là gì\".\n",
+  "prompts_header": "# Nhật ký câu hỏi (tự động)\n\nHook của ZoeyMemory tự ghi: một mốc mỗi phiên cộng từng câu chủ dự án nhắn.\nFile này ĐƯỢC COMMIT để máy kia biết máy này vừa được nhờ làm gì.\n\nĐừng sửa tay phần tự động. Muốn ghi KẾT QUẢ một việc thì thêm dòng bắt đầu bằng `> `\nngay dưới câu tương ứng. LÝ DO của quyết định thì ghi ở OpenSpec (`openspec/changes/<tên>/`).\n",
+  "sessions_header": "# Nhật ký phiên\n\nMỗi lần rời máy (`/zoey-memory:handoff`) thêm MỘT mục mới ở cuối, theo khuôn sau\n(ví dụ cố ý thụt vào; mục thật bắt đầu từ đầu dòng):\n\n    ## YYYY-MM-DD HH:MM - nhánh `main` - máy <tên máy>\n    - Đang dở: ...\n    - Vì sao dừng: ...\n    - Chờ ai quyết gì: ...\n    - Máy kia cần biết (thứ không đi theo git): ...\n\nHook đầu phiên nạp mục MỚI NHẤT vào phiên sau. Đừng chép lại `git log` -\ncommit trả lời \"đã đổi gì\", mục này trả lời \"vì sao, và tiếp theo là gì\".\n",
   "new_session": "\n## Phiên mới - {stamp} (nhánh `{branch}`, {source})\n",
 
-  "ctx_title": "# Ngữ cảnh tự nạp đầu phiên (ZoeyMemory, hook session-start.sh)",
+  "ctx_title": "# Ngữ cảnh tự nạp đầu phiên (ZoeyMemory)",
   "ctx_intro": "Đọc hết phần này TRƯỚC khi trả lời câu đầu tiên. Đây là việc đã diễn ra ở phiên trước và/hoặc Ở MÁY KIA - đừng hỏi lại thứ đã có câu trả lời ở đây, đừng đề xuất lại phương án đã bị loại. Phân vai: spec/quyết định -> OpenSpec (/opsx:*) - TDD/debug/verify/review -> superpowers - ký ức -> ZoeyMemory. Chi tiết trong CLAUDE.md.",
+  "cfg_invalid": "CẢNH BÁO: repo này đã bật ZoeyMemory nhưng không đọc được `{path}` ({reason}). Nhật ký, đồng bộ git và nạp ngữ cảnh đang TẮT cho tới khi sửa xong - báo chủ dự án, rồi chạy `/zoey-memory:doctor`.",
+  "render_failed": "CẢNH BÁO: ZoeyMemory không dựng được ngữ cảnh đầu phiên ({error}). Nhật ký và cấu hình không bị đụng; chạy `/zoey-memory:doctor`.",
 
   "sync_title": "## Đồng bộ 2 máy",
-  "sync_fetch_slow": "CẢNH BÁO: git fetch quá 8s (mạng chậm/đứt?) - so sánh với origin bên dưới có thể đã CŨ.",
+  "sync_fetch_slow": "CẢNH BÁO: git fetch quá 8s (mạng chậm/đứt?) - so sánh với origin bên dưới có thể đã CŨ; chưa thử pull.",
+  "sync_fetch_failed": "CẢNH BÁO: git fetch thất bại (mất mạng? lỗi xác thực?) - so sánh với origin bên dưới có thể đã CŨ; chưa thử pull.",
   "sync_pulled": "OK: đã tự `git pull --ff-only` {n} commit mới từ {upstream} (cây sạch nên an toàn). FILE TRÊN ĐĨA VỪA ĐỔI - mọi thứ bạn nhớ về repo này có thể đã cũ.",
+  "sync_pull_slow": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit; pull tự động bị dừng sau 20s. Tự chạy `git pull --ff-only` trước khi làm tiếp.",
+  "sync_pull_failed": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit và `git pull --ff-only` THẤT BẠI (mạng, xác thực, hoặc không fast-forward được). Tự chạy và đọc lỗi trước khi làm tiếp.",
+  "sync_behind_no_pull": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit (tính theo lần fetch thành công gần nhất) nhưng mạng đang không ổn nên chưa thử pull. Chạy `git pull --ff-only` khi mạng ổn lại.",
   "sync_dirty": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit nhưng cây làm việc CÒN THAY ĐỔI CHƯA COMMIT nên không tự pull. Xử lý chỗ dở (commit/stash) rồi `git pull` TRƯỚC khi làm tiếp.",
   "sync_diverged": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit và đã DIVERGE (có commit local chưa push). Cần rebase/merge có chủ đích - hỏi chủ dự án trước khi tự quyết.",
   "sync_unpushed": "CẢNH BÁO: còn {n} commit từ phiên trước CHƯA PUSH - `git push` sớm kẻo máy kia mở phiên sẽ không thấy.",

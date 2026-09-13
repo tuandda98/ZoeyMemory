@@ -9,7 +9,7 @@
       "name": "zoey-memory",
       "source": "./plugins/zoey-memory",
       "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Specs go to OpenSpec, code quality goes to superpowers.",
-      "version": "0.3.1"
+      "version": "0.4.0"
     }
   ]
 }

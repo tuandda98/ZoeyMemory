@@ -14,9 +14,11 @@ the flag (default `en`, or whatever the existing config says):
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/init.sh" [--language <code>]
 ```
 
-Read the output carefully: every `WARN` line is unfinished work you must handle or report. The
-script is idempotent: it never overwrites user files, and it refreshes only the plugin-owned block
-between the `<!-- zoey-memory:start/end -->` markers in CLAUDE.md.
+Read the output carefully: every `WARN` line is unfinished work you must handle or report. An
+`ERROR` line means the script stopped before writing anything (unknown language code, invalid
+existing config) - fix the cause and re-run. The script is idempotent: it never overwrites user
+files, and it refreshes only the plugin-owned block between the `<!-- zoey-memory:start/end -->`
+markers in CLAUDE.md. It always enables the git repo root, even when run from a subdirectory.
 
 ## 2. Fill `.claude/zoey-memory.json` from the actual repo (read the disk, do not guess)
 

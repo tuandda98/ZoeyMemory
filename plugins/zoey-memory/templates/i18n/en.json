@@ -1,16 +1,22 @@
 {
-  "_": "Runtime strings for language `en`. Plugin source stays English; only what the user reads (journals, loaded context, CLAUDE.md block) is localized. Add a new language by copying this file to <code>.json - missing keys fall back to en.",
+  "_": "Runtime strings for language `en`. Plugin source stays English; only what the user reads (journals, loaded context, CLAUDE.md block) is localized. Add a language by copying this file to <code>.json - missing or broken keys fall back to en. Keep {placeholders} exactly as they are. In sessions_header the example entry MUST stay indented (4 spaces): a `## ` heading at column 0 would be read as a real entry.",
 
-  "prompts_header": "# Prompt journal (automatic)\n\nWritten by the ZoeyMemory hook `log-prompt.sh`: a marker per session plus every prompt the user sends.\nThis file is COMMITTED so the other machine can see what this one was asked to do.\n\nDo not hand-edit the automatic lines. To record the OUTCOME of a task, add a line starting with `> `\nright under the matching prompt. The REASONING behind a decision belongs in OpenSpec (`openspec/changes/<name>/`).\n",
-  "sessions_header": "# Session journal\n\nEvery time you leave a machine (`/zoey-memory:handoff`) append ONE new entry at the end, using this shape:\n\n## YYYY-MM-DD HH:MM - branch `main` - machine <hostname>\n- In progress: ...\n- Why we stopped: ...\n- Waiting on whom for what: ...\n- The other machine needs to know (things outside git): ...\n\nThe `session-start.sh` hook loads the LATEST entry into the next session. Do not repeat `git log` -\ncommits answer \"what changed\", this entry answers \"why, and what comes next\".\n",
+  "prompts_header": "# Prompt journal (automatic)\n\nWritten by the ZoeyMemory hooks: a marker per session plus every prompt the user sends.\nThis file is COMMITTED so the other machine can see what this one was asked to do.\n\nDo not hand-edit the automatic lines. To record the OUTCOME of a task, add a line starting with `> `\nright under the matching prompt. The REASONING behind a decision belongs in OpenSpec (`openspec/changes/<name>/`).\n",
+  "sessions_header": "# Session journal\n\nEvery time you leave a machine (`/zoey-memory:handoff`) append ONE new entry at the end, shaped like this\n(the example is indented on purpose; real entries start at column 0):\n\n    ## YYYY-MM-DD HH:MM - branch `main` - machine <hostname>\n    - In progress: ...\n    - Why we stopped: ...\n    - Waiting on whom for what: ...\n    - The other machine needs to know (things outside git): ...\n\nThe session-start hook loads the LATEST entry into the next session. Do not repeat `git log` -\ncommits answer \"what changed\", this entry answers \"why, and what comes next\".\n",
   "new_session": "\n## New session - {stamp} (branch `{branch}`, {source})\n",
 
-  "ctx_title": "# Context auto-loaded at session start (ZoeyMemory, hook session-start.sh)",
+  "ctx_title": "# Context auto-loaded at session start (ZoeyMemory)",
   "ctx_intro": "Read all of this BEFORE answering the first prompt. It is what happened in the previous session and/or ON THE OTHER MACHINE - do not re-ask what is already answered here, do not re-propose options already rejected. Division of labor: specs/decisions -> OpenSpec (/opsx:*) - TDD/debugging/verification/review -> superpowers - memory -> ZoeyMemory. Details in CLAUDE.md.",
+  "cfg_invalid": "WARNING: ZoeyMemory is enabled here but `{path}` could not be read ({reason}). Journaling, git sync and context loading are OFF until it is fixed - tell the user, then run `/zoey-memory:doctor`.",
+  "render_failed": "WARNING: ZoeyMemory could not render the session context ({error}). Journals and config are untouched; run `/zoey-memory:doctor`.",
 
   "sync_title": "## Two-machine sync",
-  "sync_fetch_slow": "WARNING: git fetch took over 8s (slow/offline network?) - the origin comparison below may be STALE.",
+  "sync_fetch_slow": "WARNING: git fetch took over 8s (slow/offline network?) - the origin comparison below may be STALE; no pull was attempted.",
+  "sync_fetch_failed": "WARNING: git fetch failed (offline? auth?) - the origin comparison below may be STALE; no pull was attempted.",
   "sync_pulled": "OK: auto `git pull --ff-only` brought in {n} new commit(s) from {upstream} (tree was clean, so it was safe). FILES ON DISK JUST CHANGED - anything you remember about this repo may be outdated.",
+  "sync_pull_slow": "WARNING: branch is BEHIND {upstream} by {n} commit(s); the auto-pull was stopped after 20s. Run `git pull --ff-only` yourself before continuing.",
+  "sync_pull_failed": "WARNING: branch is BEHIND {upstream} by {n} commit(s) and `git pull --ff-only` FAILED (network, auth, or a non-fast-forward). Run it yourself and read the error before continuing.",
+  "sync_behind_no_pull": "WARNING: branch is BEHIND {upstream} by {n} commit(s) (as of the last successful fetch) but the network is not healthy, so no pull was attempted. Run `git pull --ff-only` when it is back.",
   "sync_dirty": "WARNING: branch is BEHIND {upstream} by {n} commit(s) but the working tree has UNCOMMITTED CHANGES, so no auto-pull. Settle the in-progress work (commit/stash) and `git pull` BEFORE continuing.",
   "sync_diverged": "WARNING: branch is BEHIND {upstream} by {n} commit(s) and has DIVERGED (local commits not pushed). Needs a deliberate rebase/merge - ask the user before deciding.",
   "sync_unpushed": "WARNING: {n} commit(s) from the previous session are NOT PUSHED - `git push` soon or the other machine will not see them.",
