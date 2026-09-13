@@ -92,9 +92,9 @@ fi
 # 4. .claude/zoey-memory.json (strip `_` doc keys, name = folder name, language = chosen)
 mkdir -p .claude
 if [ -f .claude/zoey-memory.json ]; then
-  cur="$(cfg_get language en)"
+  cur="$(cfg_get language '')"   # empty = key missing (config from an older version)
   if [ "$cur" != "$LANG_CODE" ]; then
-    python3 - ".claude/zoey-memory.json" "$LANG_CODE" <<'PY' && ok ".claude/zoey-memory.json language: $cur -> $LANG_CODE" || warn "could not update language in config"
+    python3 - ".claude/zoey-memory.json" "$LANG_CODE" <<'PY' && ok ".claude/zoey-memory.json language: ${cur:-(unset)} -> $LANG_CODE" || warn "could not update language in config"
 import json, sys
 p, lang = sys.argv[1:3]
 c = json.load(open(p, encoding="utf-8")); c["language"] = lang
