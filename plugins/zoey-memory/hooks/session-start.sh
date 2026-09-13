@@ -143,8 +143,9 @@ for ln in read(os.path.join(root, p_rel)).splitlines():
 if asks:
     parts.append(t["asks_title"].format(n=n_prompts, path=p_rel) + "\n" + "\n".join(asks[-n_prompts:]))
 
-# 2. Latest session note.
-blocks = [b.strip() for b in re.split(r"(?m)^(?=## )", read(os.path.join(root, s_rel))) if b.strip().startswith("## ")]
+# 2. Latest session note (skip the "## YYYY-MM-DD ..." placeholder example in the file header).
+blocks = [b.strip() for b in re.split(r"(?m)^(?=## )", read(os.path.join(root, s_rel)))
+          if b.strip().startswith("## ") and "YYYY" not in b.splitlines()[0]]
 if blocks:
     parts.append(t["session_title"].format(path=s_rel) + "\n" + blocks[-1][:1500])
 
