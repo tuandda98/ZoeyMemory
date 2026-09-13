@@ -1,0 +1,31 @@
+{
+  "_": "Runtime strings for language `vi` (Vietnamese). Keys missing here fall back to en.json.",
+
+  "prompts_header": "# Nhật ký câu hỏi (tự động)\n\nHook `log-prompt.sh` của ZoeyMemory tự ghi: một mốc mỗi phiên cộng từng câu chủ dự án nhắn.\nFile này ĐƯỢC COMMIT để máy kia biết máy này vừa được nhờ làm gì.\n\nĐừng sửa tay phần tự động. Muốn ghi KẾT QUẢ một việc thì thêm dòng bắt đầu bằng `> `\nngay dưới câu tương ứng. LÝ DO của quyết định thì ghi ở OpenSpec (`openspec/changes/<tên>/`).\n",
+  "sessions_header": "# Nhật ký phiên\n\nMỗi lần rời máy (`/zoey-memory:handoff`) thêm MỘT mục mới ở cuối, theo khuôn:\n\n## YYYY-MM-DD HH:MM - nhánh `main` - máy <tên máy>\n- Đang dở: ...\n- Vì sao dừng: ...\n- Chờ ai quyết gì: ...\n- Máy kia cần biết (thứ không đi theo git): ...\n\nHook `session-start.sh` nạp mục MỚI NHẤT vào phiên sau. Đừng chép lại `git log` -\ncommit trả lời \"đã đổi gì\", mục này trả lời \"vì sao, và tiếp theo là gì\".\n",
+  "new_session": "\n## Phiên mới - {stamp} (nhánh `{branch}`, {source})\n",
+
+  "ctx_title": "# Ngữ cảnh tự nạp đầu phiên (ZoeyMemory, hook session-start.sh)",
+  "ctx_intro": "Đọc hết phần này TRƯỚC khi trả lời câu đầu tiên. Đây là việc đã diễn ra ở phiên trước và/hoặc Ở MÁY KIA - đừng hỏi lại thứ đã có câu trả lời ở đây, đừng đề xuất lại phương án đã bị loại. Phân vai: spec/quyết định -> OpenSpec (/opsx:*) - TDD/debug/verify/review -> superpowers - ký ức -> ZoeyMemory. Chi tiết trong CLAUDE.md.",
+
+  "sync_title": "## Đồng bộ 2 máy",
+  "sync_fetch_slow": "CẢNH BÁO: git fetch quá 8s (mạng chậm/đứt?) - so sánh với origin bên dưới có thể đã CŨ.",
+  "sync_pulled": "OK: đã tự `git pull --ff-only` {n} commit mới từ {upstream} (cây sạch nên an toàn). FILE TRÊN ĐĨA VỪA ĐỔI - mọi thứ bạn nhớ về repo này có thể đã cũ.",
+  "sync_dirty": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit nhưng cây làm việc CÒN THAY ĐỔI CHƯA COMMIT nên không tự pull. Xử lý chỗ dở (commit/stash) rồi `git pull` TRƯỚC khi làm tiếp.",
+  "sync_diverged": "CẢNH BÁO: nhánh đứng SAU {upstream} {n} commit và đã DIVERGE (có commit local chưa push). Cần rebase/merge có chủ đích - hỏi chủ dự án trước khi tự quyết.",
+  "sync_unpushed": "CẢNH BÁO: còn {n} commit từ phiên trước CHƯA PUSH - `git push` sớm kẻo máy kia mở phiên sẽ không thấy.",
+
+  "asks_title": "## Chủ dự án đã nhờ gì gần đây ({n} câu cuối, nguồn {path})",
+  "session_title": "## Nhật ký phiên gần nhất (nguồn {path})",
+
+  "openspec_open_title": "## OpenSpec - change đang mở (nguồn openspec/changes/)",
+  "openspec_row": "- `{name}` - {progress} - đã có: {artifacts}",
+  "openspec_hint": "Tiếp tục: `/opsx:apply <tên>` - xong hết task: `/opsx:archive <tên>`.",
+  "openspec_none": "## OpenSpec\nKhông có change nào đang mở. Việc mới đáng nhớ -> `/opsx:propose <tên>`.",
+  "openspec_missing": "## OpenSpec\nRepo CHƯA init OpenSpec (thiếu `openspec/`). Chạy `/zoey-memory:init`.",
+  "tasks_done": "{done}/{total} task xong",
+  "no_tasks": "chưa có task",
+  "empty": "trống",
+
+  "git_title": "## Git - nhánh `{branch}`"
+}

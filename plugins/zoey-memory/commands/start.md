@@ -23,5 +23,7 @@ yourself without asking step by step**, then report briefly.
    keys/ssh. If missing, **ask for a manual transfer from the other machine**; do not try to
    rebuild from scratch.
 
+Language: write the summary in the `language` set in `.claude/zoey-memory.json`.
+
 Report: what the other machine did - open changes + next task - **anything out of sync that must
 be handled before continuing**.

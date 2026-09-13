@@ -8,7 +8,7 @@ Three tools combined, one job each, no overlap:
 | Specs, design, reasoning behind decisions, history | **OpenSpec** | [Fission-AI/openspec](https://github.com/Fission-AI/openspec) |
 | TDD, debugging, verification, code review | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) |
 
-Plugin details: [`plugins/zoey-memory/README.md`](plugins/zoey-memory/README.md).
+Plugin details, language support and the update/drift policy: [`plugins/zoey-memory/README.md`](plugins/zoey-memory/README.md).
 
 ## Install (once per machine)
 
@@ -34,7 +34,8 @@ npm i -g @fission-ai/openspec@latest
 Open Claude Code in the repo and type:
 
 ```
-/zoey-memory:init
+/zoey-memory:init          # English
+/zoey-memory:init vi       # Vietnamese journals, context and CLAUDE.md block
 ```
 
 It runs `openspec init`, creates `.claude/zoey-memory.json` and `docs/memory/`, appends the workflow
@@ -47,11 +48,19 @@ block to `CLAUDE.md`, then commits. From the next session on, the hooks journal 
 3. Done -> `/opsx:archive <name>`.
 4. Leaving -> `/zoey-memory:handoff`.
 
+## Keeping the three tools current
+
+```
+/zoey-memory:update        # updates superpowers, ZoeyMemory, openspec CLI; regenerates this repo's OpenSpec files
+/zoey-memory:doctor        # read-only drift check; run in each repo after an update
+```
+
 ## Developing this plugin
 
-Edit files under `plugins/zoey-memory/`, then:
+Edit files under `plugins/zoey-memory/`, bump `version` in both `.claude-plugin/*.json`, then:
 
 ```bash
+claude plugin validate .
 claude plugin marketplace update zoey-memory
 claude plugin install zoey-memory@zoey-memory      # reinstall the new version
 ```
@@ -62,4 +71,5 @@ Try the hooks without opening Claude:
 export CLAUDE_PROJECT_DIR=/path/to/test-repo
 echo '{"hook_event_name":"UserPromptSubmit","prompt":"journal test"}' | bash plugins/zoey-memory/hooks/log-prompt.sh
 bash plugins/zoey-memory/hooks/session-start.sh | python3 -m json.tool
+bash plugins/zoey-memory/scripts/doctor.sh /path/to/test-repo
 ```
