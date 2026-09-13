@@ -1,0 +1,34 @@
+{
+  "description": "Nhật ký tự động + nạp ngữ cảnh + đồng bộ 2 máy. Mọi hook tự thoát êm nếu repo không có .claude/kyuc.json (tức chưa chạy /kyuc:khoi-tao).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ghi-nhat-ky.sh\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/dau-phien.sh\"",
+            "timeout": 45,
+            "statusMessage": "kyuc: đồng bộ git + nạp ngữ cảnh phiên trước…"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ghi-nhat-ky.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "_chuThich": "Cấu hình bộ `kyuc` cho repo này. Đây là file DUY NHẤT các hook đọc — không có nó thì mọi hook tự thoát êm. JSON thuần, không comment: các key bắt đầu bằng `_` chỉ là chú thích, /kyuc:khoi-tao sẽ bỏ khi copy.",
+
+  "ten": "<Tên dự án>",
+
+  "nhatky": {
+    "_": "cauHoi: hook tự ghi từng câu chủ dự án nhắn (ĐƯỢC COMMIT). phien: /kyuc:cuoi-ca ghi 'đang dở tới đâu, vì sao dừng, chờ ai'. bat=false để tắt ghi tự động.",
+    "bat": true,
+    "cauHoi": "docs/nhatky/CAU_HOI.md",
+    "phien": "docs/nhatky/PHIEN.md"
+  },
+
+  "ngucanh": {
+    "_": "Đầu phiên tự nạp vào context: N câu vừa nhờ + nhật ký phiên gần nhất + change OpenSpec đang mở + git log.",
+    "bat": true,
+    "soCau": 30
+  },
+
+  "git": {
+    "_": "tuPull: đầu phiên tự `pull --ff-only` khi đứng sau origin VÀ cây sạch VÀ không diverge. choCommit/choPush: Claude được tự commit/push không. nhanhLamViec: nhánh mặc định.",
+    "tuPull": true,
+    "choCommit": true,
+    "choPush": true,
+    "nhanhLamViec": "main"
+  },
+
+  "ngoaiGit": {
+    "_": "Thứ KHÔNG đi theo git mà máy kia sẽ thiếu — /kyuc:dau-ca kiểm riêng, /kyuc:cuoi-ca nhắc.",
+    "muc": [
+      "file env/secret (đã có chưa? đang trỏ DB dev hay prod?)",
+      "migration đã áp lên DB chưa",
+      "SSH key / khoá git-crypt"
+    ]
+  },
+
+  "camKy": {
+    "_": "Việc Claude TUYỆT ĐỐI không tự làm ở repo này. Liệt kê cụ thể.",
+    "muc": ["deploy production", "chạy lệnh xoá dữ liệu trên DB thật"]
+  }
+}
