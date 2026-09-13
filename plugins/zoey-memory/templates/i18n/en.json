@@ -1,0 +1,31 @@
+{
+  "_": "Runtime strings for language `en`. Plugin source stays English; only what the user reads (journals, loaded context, CLAUDE.md block) is localized. Add a new language by copying this file to <code>.json - missing keys fall back to en.",
+
+  "prompts_header": "# Prompt journal (automatic)\n\nWritten by the ZoeyMemory hook `log-prompt.sh`: a marker per session plus every prompt the user sends.\nThis file is COMMITTED so the other machine can see what this one was asked to do.\n\nDo not hand-edit the automatic lines. To record the OUTCOME of a task, add a line starting with `> `\nright under the matching prompt. The REASONING behind a decision belongs in OpenSpec (`openspec/changes/<name>/`).\n",
+  "sessions_header": "# Session journal\n\nEvery time you leave a machine (`/zoey-memory:handoff`) append ONE new entry at the end, using this shape:\n\n## YYYY-MM-DD HH:MM - branch `main` - machine <hostname>\n- In progress: ...\n- Why we stopped: ...\n- Waiting on whom for what: ...\n- The other machine needs to know (things outside git): ...\n\nThe `session-start.sh` hook loads the LATEST entry into the next session. Do not repeat `git log` -\ncommits answer \"what changed\", this entry answers \"why, and what comes next\".\n",
+  "new_session": "\n## New session - {stamp} (branch `{branch}`, {source})\n",
+
+  "ctx_title": "# Context auto-loaded at session start (ZoeyMemory, hook session-start.sh)",
+  "ctx_intro": "Read all of this BEFORE answering the first prompt. It is what happened in the previous session and/or ON THE OTHER MACHINE - do not re-ask what is already answered here, do not re-propose options already rejected. Division of labor: specs/decisions -> OpenSpec (/opsx:*) - TDD/debugging/verification/review -> superpowers - memory -> ZoeyMemory. Details in CLAUDE.md.",
+
+  "sync_title": "## Two-machine sync",
+  "sync_fetch_slow": "WARNING: git fetch took over 8s (slow/offline network?) - the origin comparison below may be STALE.",
+  "sync_pulled": "OK: auto `git pull --ff-only` brought in {n} new commit(s) from {upstream} (tree was clean, so it was safe). FILES ON DISK JUST CHANGED - anything you remember about this repo may be outdated.",
+  "sync_dirty": "WARNING: branch is BEHIND {upstream} by {n} commit(s) but the working tree has UNCOMMITTED CHANGES, so no auto-pull. Settle the in-progress work (commit/stash) and `git pull` BEFORE continuing.",
+  "sync_diverged": "WARNING: branch is BEHIND {upstream} by {n} commit(s) and has DIVERGED (local commits not pushed). Needs a deliberate rebase/merge - ask the user before deciding.",
+  "sync_unpushed": "WARNING: {n} commit(s) from the previous session are NOT PUSHED - `git push` soon or the other machine will not see them.",
+
+  "asks_title": "## What the user asked recently (last {n}, source {path})",
+  "session_title": "## Latest session note (source {path})",
+
+  "openspec_open_title": "## OpenSpec - open changes (source openspec/changes/)",
+  "openspec_row": "- `{name}` - {progress} - present: {artifacts}",
+  "openspec_hint": "Continue: `/opsx:apply <name>` - all tasks done: `/opsx:archive <name>`.",
+  "openspec_none": "## OpenSpec\nNo open changes. New work worth remembering -> `/opsx:propose <name>`.",
+  "openspec_missing": "## OpenSpec\nOpenSpec is NOT initialized in this repo (no `openspec/`). Run `/zoey-memory:init`.",
+  "tasks_done": "{done}/{total} tasks done",
+  "no_tasks": "no tasks yet",
+  "empty": "empty",
+
+  "git_title": "## Git - branch `{branch}`"
+}

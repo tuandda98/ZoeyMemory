@@ -3,6 +3,9 @@
 
   "name": "<project name>",
 
+  "_language": "Language of everything the user reads: journals, loaded context, CLAUDE.md block, session notes, reports. Must match a file in templates/i18n/ (en, vi). Also passed to `openspec init --language`. Plugin source code stays English regardless.",
+  "language": "en",
+
   "journal": {
     "_": "prompts: the hook logs every user prompt here (COMMITTED). sessions: /zoey-memory:handoff writes 'what is in progress, why we stopped, who decides what'. enabled=false turns automatic logging off.",
     "enabled": true,

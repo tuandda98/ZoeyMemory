@@ -9,7 +9,8 @@ session starts over.** Do everything, run it all yourself:
    in `openspec/changes/<name>/tasks.md`. If every task is done and verified, remind the user to run
    `/opsx:archive <name>` (do not archive on your own).
 3. **Write the session note** (`journal.sessions` in `.claude/zoey-memory.json`, default
-   `docs/memory/SESSIONS.md`) - append ONE new entry at the end, using the shape in the file:
+   `docs/memory/SESSIONS.md`) - append ONE new entry at the end, using the shape in the file and the
+   `language` from the config:
    - In progress: which change, which task, which file is half-edited.
    - Why we stopped: out of time / blocked on what / waiting for what.
    - Waiting on whom for what: open questions the user must answer.
@@ -23,5 +24,7 @@ session starts over.** Do everything, run it all yourself:
 
 WARNING: **never merge into the main branch and never deploy to production** in this step unless the
 user explicitly said so. Respect `forbidden.items`.
+
+Language: write the session note and the report in the `language` set in `.claude/zoey-memory.json`.
 
 Report: what was committed - what is still in progress - what the other machine needs to know before continuing.

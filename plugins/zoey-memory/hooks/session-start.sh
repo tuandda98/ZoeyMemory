@@ -3,20 +3,22 @@
 #
 # Job 1 - two-machine sync: fetch (8s ceiling); if behind origin AND the tree is CLEAN AND not
 # diverged, `pull --ff-only` automatically; dirty tree or diverged -> only WARN; unpushed commits
-# -> warn too.
+# -> warn too. Bash emits machine-readable events; Python renders them in the configured language.
 # Job 2 - load context into the session start:
 #   - the last N prompts the user sent (automatic journal)
 #   - the latest entry of the session journal (written by /zoey-memory:handoff)
-#   - open OpenSpec changes with task progress
+#   - open OpenSpec changes with task progress (read from the filesystem, no CLI dependency)
 #   - recent git log
 #
 # Why: Claude's memory does not travel across machines or sessions. Without this hook every new
 # session re-asks what was already answered and re-proposes options already rejected.
 #
-# Toggle per repo via `.claude/zoey-memory.json` (`git.autoPull`, `context.enabled`). No config
-# file = repo has not enabled ZoeyMemory -> exit silently. ALWAYS exit 0.
+# Toggle per repo via `.claude/zoey-memory.json` (`git.autoPull`, `context.enabled`). Language of
+# the loaded text: `language` -> templates/i18n/<lang>.json (fallback en). No config file = repo has
+# not enabled ZoeyMemory -> exit silently. ALWAYS exit 0.
 set -uo pipefail
 
+PLUGIN="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || true)}"
 [ -n "$ROOT" ] || exit 0
 CFG="$ROOT/.claude/zoey-memory.json"
@@ -35,22 +37,18 @@ print('' if cur is None else ('1' if cur is True else ('0' if cur is False else 
 " 2>/dev/null; }
 
 AUTO_PULL="$(read_cfg git.autoPull)"
-CTX_ON="$(read_cfg context.enabled)"
-N_PROMPTS="$(read_cfg context.recentPrompts)"; [ -n "$N_PROMPTS" ] || N_PROMPTS=30
-FILE_PROMPTS="$(read_cfg journal.prompts)";   [ -n "$FILE_PROMPTS" ] || FILE_PROMPTS="docs/memory/PROMPTS.md"
-FILE_SESSIONS="$(read_cfg journal.sessions)"; [ -n "$FILE_SESSIONS" ] || FILE_SESSIONS="docs/memory/SESSIONS.md"
 
-SYNC_MSG=""
-add_msg() { SYNC_MSG="${SYNC_MSG}$1"$'\n'; }
+# ---------- JOB 1: sync (emit events: FETCH_SLOW | PULLED|n|upstream | DIRTY|n|upstream | DIVERGED|n|upstream | UNPUSHED|n) ----------
+EVENTS=""
+emit() { EVENTS="${EVENTS}$1"$'\n'; }
 
-# ---------- JOB 1: sync ----------
 if [ -d "$ROOT/.git" ] && [ "$AUTO_PULL" != "0" ]; then
   git fetch --quiet 2>/dev/null &
   fpid=$!; i=0
   while kill -0 "$fpid" 2>/dev/null && [ "$i" -lt 16 ]; do sleep 0.5; i=$((i + 1)); done
   if kill -0 "$fpid" 2>/dev/null; then
     kill "$fpid" 2>/dev/null; wait "$fpid" 2>/dev/null
-    add_msg "WARNING: git fetch took over 8s (slow/offline network?) - the origin comparison below may be STALE."
+    emit "FETCH_SLOW"
   else
     wait "$fpid" 2>/dev/null || true
   fi
@@ -62,31 +60,28 @@ if [ -d "$ROOT/.git" ] && [ "$AUTO_PULL" != "0" ]; then
     dirty="$(git status --porcelain 2>/dev/null | head -1)"
     if [ "${behind:-0}" -gt 0 ]; then
       if [ -z "$dirty" ] && [ "${ahead:-0}" -eq 0 ] && git pull --ff-only --quiet 2>/dev/null; then
-        add_msg "OK: auto \`git pull --ff-only\` brought in $behind new commit(s) from $upstream (tree was clean, so it was safe). FILES ON DISK JUST CHANGED - anything you remember about this repo may be outdated."
+        emit "PULLED|$behind|$upstream"
       elif [ -n "$dirty" ]; then
-        add_msg "WARNING: branch is BEHIND $upstream by $behind commit(s) but the working tree has UNCOMMITTED CHANGES, so no auto-pull. Settle the in-progress work (commit/stash) and \`git pull\` BEFORE continuing."
+        emit "DIRTY|$behind|$upstream"
       else
-        add_msg "WARNING: branch is BEHIND $upstream by $behind commit(s) and has DIVERGED (local commits not pushed). Needs a deliberate rebase/merge - ask the user before deciding."
+        emit "DIVERGED|$behind|$upstream"
       fi
     fi
-    [ "${ahead:-0}" -gt 0 ] && add_msg "WARNING: $ahead commit(s) from the previous session are NOT PUSHED - \`git push\` soon or the other machine will not see them."
+    [ "${ahead:-0}" -gt 0 ] && emit "UNPUSHED|$ahead"
   fi
 fi
 
-# ---------- JOB 2: load context ----------
-[ "$CTX_ON" = "0" ] && { [ -n "$SYNC_MSG" ] && printf '%s' "$SYNC_MSG"; exit 0; }
-
-python3 - "$ROOT" "$FILE_PROMPTS" "$FILE_SESSIONS" "$N_PROMPTS" "$SYNC_MSG" <<'PY' 2>/dev/null || { [ -n "$SYNC_MSG" ] && printf '%s' "$SYNC_MSG"; exit 0; }
+# ---------- JOB 2: render sync events + load context ----------
+python3 - "$ROOT" "$CFG" "$PLUGIN/templates/i18n" "$EVENTS" <<'PY' 2>/dev/null
 import json, os, re, subprocess, sys
 
-root, p_rel, s_rel, n_prompts, sync_msg = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4] or 30), sys.argv[5]
-parts = []
+root, cfg_path, i18n_dir, events = sys.argv[1:5]
 
-def sh(*cmd):
+def load_json(path):
     try:
-        return subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=10).stdout.strip()
+        return json.load(open(path, encoding="utf-8"))
     except Exception:
-        return ""
+        return {}
 
 def read(path):
     try:
@@ -94,8 +89,46 @@ def read(path):
     except Exception:
         return ""
 
-if sync_msg.strip():
-    parts.append("## Two-machine sync\n" + sync_msg.strip())
+def sh(*cmd):
+    try:
+        return subprocess.run(cmd, cwd=root, capture_output=True, text=True, timeout=10).stdout.strip()
+    except Exception:
+        return ""
+
+cfg = load_json(cfg_path)
+lang = str(cfg.get("language") or "en")
+t = load_json(os.path.join(i18n_dir, "en.json"))
+t.update(load_json(os.path.join(i18n_dir, lang + ".json")))
+
+journal = cfg.get("journal") or {}
+context = cfg.get("context") or {}
+p_rel = journal.get("prompts") or "docs/memory/PROMPTS.md"
+s_rel = journal.get("sessions") or "docs/memory/SESSIONS.md"
+try:
+    n_prompts = int(context.get("recentPrompts") or 30)
+except Exception:
+    n_prompts = 30
+ctx_on = context.get("enabled") is not False
+
+parts = []
+
+# 0. Sync events -> localized messages.
+sync_lines = []
+for ev in events.splitlines():
+    f = ev.split("|")
+    if f[0] == "FETCH_SLOW":
+        sync_lines.append(t["sync_fetch_slow"])
+    elif f[0] in ("PULLED", "DIRTY", "DIVERGED") and len(f) == 3:
+        sync_lines.append(t["sync_" + f[0].lower()].format(n=f[1], upstream=f[2]))
+    elif f[0] == "UNPUSHED" and len(f) == 2:
+        sync_lines.append(t["sync_unpushed"].format(n=f[1]))
+if sync_lines:
+    parts.append(t["sync_title"] + "\n" + "\n".join(sync_lines))
+
+if not ctx_on:
+    if sync_lines:
+        print("\n".join(sync_lines))
+    sys.exit(0)
 
 # 1. What the user asked recently - drop machine-generated noise.
 asks = []
@@ -108,16 +141,14 @@ for ln in read(os.path.join(root, p_rel)).splitlines():
         continue
     asks.append(f"[{m.group(1)}] {txt[:200]}")
 if asks:
-    parts.append(
-        f"## What the user asked recently (last {n_prompts}, source {p_rel})\n" + "\n".join(asks[-n_prompts:])
-    )
+    parts.append(t["asks_title"].format(n=n_prompts, path=p_rel) + "\n" + "\n".join(asks[-n_prompts:]))
 
-# 2. Latest session note - what is in progress, why we stopped, who decides what.
+# 2. Latest session note.
 blocks = [b.strip() for b in re.split(r"(?m)^(?=## )", read(os.path.join(root, s_rel))) if b.strip().startswith("## ")]
 if blocks:
-    parts.append(f"## Latest session note (source {s_rel})\n" + blocks[-1][:1500])
+    parts.append(t["session_title"].format(path=s_rel) + "\n" + blocks[-1][:1500])
 
-# 3. OpenSpec - open changes with progress.
+# 3. OpenSpec - open changes with progress (filesystem only, so it keeps working if the CLI changes).
 os_dir = os.path.join(root, "openspec")
 ch_dir = os.path.join(os_dir, "changes")
 if os.path.isdir(ch_dir):
@@ -134,35 +165,25 @@ if os.path.isdir(ch_dir):
                 total += 1
                 if re.match(r"^[-*] \[[xX]\]", s):
                     done += 1
-        prog = f"{done}/{total} tasks done" if total else "no tasks yet"
-        rows.append(f"- `{name}` - {prog} - present: {', '.join(arts) or 'empty'}")
+        prog = t["tasks_done"].format(done=done, total=total) if total else t["no_tasks"]
+        rows.append(t["openspec_row"].format(name=name, progress=prog, artifacts=", ".join(arts) or t["empty"]))
     if rows:
-        parts.append(
-            "## OpenSpec - open changes (source openspec/changes/)\n" + "\n".join(rows)
-            + "\n\nContinue: `/opsx:apply <name>` - all tasks done: `/opsx:archive <name>`."
-        )
+        parts.append(t["openspec_open_title"] + "\n" + "\n".join(rows) + "\n\n" + t["openspec_hint"])
     else:
-        parts.append("## OpenSpec\nNo open changes. New work worth remembering -> `/opsx:propose <name>`.")
+        parts.append(t["openspec_none"])
 elif not os.path.isdir(os_dir):
-    parts.append("## OpenSpec\nOpenSpec is NOT initialized in this repo (no `openspec/`). Run `/zoey-memory:init`.")
+    parts.append(t["openspec_missing"])
 
 # 4. Recent work.
 log = sh("git", "log", "--oneline", "-8")
 if log:
     branch = sh("git", "branch", "--show-current")
-    parts.append(f"## Git - branch `{branch or '?'}`\n{log}")
+    parts.append(t["git_title"].format(branch=branch or "?") + "\n" + log)
 
 if not parts:
     sys.exit(0)
 
-ctx = (
-    "# Context auto-loaded at session start (ZoeyMemory, hook session-start.sh)\n\n"
-    "Read all of this BEFORE answering the first prompt. It is what happened in the previous "
-    "session and/or ON THE OTHER MACHINE - do not re-ask what is already answered here, do not "
-    "re-propose options already rejected. Division of labor: specs/decisions -> OpenSpec (/opsx:*) "
-    "- TDD/debugging/verification/review -> superpowers - memory -> ZoeyMemory. Details in CLAUDE.md.\n\n"
-    + "\n\n".join(parts)
-)
+ctx = t["ctx_title"] + "\n\n" + t["ctx_intro"] + "\n\n" + "\n\n".join(parts)
 print(json.dumps({
     "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": ctx},
     "suppressOutput": True,
