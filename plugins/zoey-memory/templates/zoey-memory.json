@@ -1,0 +1,40 @@
+{
+  "_comment": "ZoeyMemory config for this repo. This is the ONLY file the hooks read - without it every hook exits silently. Plain JSON, no comments: keys starting with `_` are documentation and are stripped by /zoey-memory:init.",
+
+  "name": "<project name>",
+
+  "journal": {
+    "_": "prompts: the hook logs every user prompt here (COMMITTED). sessions: /zoey-memory:handoff writes 'what is in progress, why we stopped, who decides what'. enabled=false turns automatic logging off.",
+    "enabled": true,
+    "prompts": "docs/memory/PROMPTS.md",
+    "sessions": "docs/memory/SESSIONS.md"
+  },
+
+  "context": {
+    "_": "Loaded into context at session start: the last N prompts + latest session note + open OpenSpec changes + git log.",
+    "enabled": true,
+    "recentPrompts": 30
+  },
+
+  "git": {
+    "_": "autoPull: at session start, `pull --ff-only` when behind origin AND the tree is clean AND not diverged. allowCommit/allowPush: may Claude commit/push on its own. workingBranch: the default branch.",
+    "autoPull": true,
+    "allowCommit": true,
+    "allowPush": true,
+    "workingBranch": "main"
+  },
+
+  "outsideGit": {
+    "_": "Things that do NOT travel with git and the other machine will be missing - /zoey-memory:start checks these, /zoey-memory:handoff reminds about them.",
+    "items": [
+      "env/secret files (present? pointing at dev or prod DB?)",
+      "migrations applied to the DB",
+      "SSH keys / git-crypt key"
+    ]
+  },
+
+  "forbidden": {
+    "_": "Things Claude must NEVER do on its own in this repo. Be specific.",
+    "items": ["deploy to production", "run data-deleting commands against the real DB"]
+  }
+}

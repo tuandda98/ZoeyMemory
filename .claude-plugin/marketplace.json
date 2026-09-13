@@ -1,15 +1,15 @@
 {
-  "name": "claude-kyuc",
-  "description": "Ký ức giữa các phiên và giữa hai máy cho Claude Code — ghép với OpenSpec (spec) và superpowers (chất lượng code). Dùng chung cho mọi dự án của Tuấn.",
+  "name": "zoey-memory",
+  "description": "ZoeyMemory: memory across Claude Code sessions and machines. Pairs with OpenSpec (specs and decisions) and superpowers (code quality). Shared across all of Tuan's projects.",
   "owner": {
-    "name": "Đỗ Đào Anh Tuấn"
+    "name": "Do Dao Anh Tuan"
   },
   "plugins": [
     {
-      "name": "kyuc",
-      "source": "./plugins/kyuc",
-      "description": "Nhật ký câu hỏi tự động + nạp ngữ cảnh đầu phiên + đồng bộ 2 máy. Spec giao OpenSpec, chất lượng code giao superpowers.",
-      "version": "0.1.0"
+      "name": "zoey-memory",
+      "source": "./plugins/zoey-memory",
+      "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Specs go to OpenSpec, code quality goes to superpowers.",
+      "version": "0.2.0"
     }
   ]
 }
