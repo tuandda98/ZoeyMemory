@@ -4,12 +4,13 @@
   "owner": {
     "name": "Do Dao Anh Tuan"
   },
+  "allowCrossMarketplaceDependenciesOn": ["superpowers-marketplace"],
   "plugins": [
     {
       "name": "zoey-memory",
       "source": "./plugins/zoey-memory",
-      "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Specs go to OpenSpec, code quality goes to superpowers.",
-      "version": "0.4.0"
+      "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Pulls in superpowers as a dependency; specs go to OpenSpec (CLI installed by /zoey-memory:init).",
+      "version": "0.4.1"
     }
   ]
 }
