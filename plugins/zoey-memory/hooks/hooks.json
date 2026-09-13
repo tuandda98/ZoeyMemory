@@ -1,15 +1,10 @@
 {
-  "description": "ZoeyMemory: automatic journal + session context + two-machine sync. Every hook exits silently if the repo has no .claude/zoey-memory.json (i.e. /zoey-memory:init was never run).",
+  "description": "ZoeyMemory: automatic journal + session context + two-machine sync. Every hook exits silently if the repo has no .claude/zoey-memory.json (i.e. /zoey-memory:init was never run). SessionStart runs ONE hook on purpose: it must pull BEFORE writing the session marker, and hooks on the same event run concurrently.",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/log-prompt.sh\"",
-            "timeout": 15
-          },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",

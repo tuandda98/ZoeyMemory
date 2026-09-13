@@ -65,11 +65,17 @@ claude plugin marketplace update zoey-memory
 claude plugin install zoey-memory@zoey-memory      # reinstall the new version
 ```
 
-Try the hooks without opening Claude:
+Run the regression suite (throwaway repos in a temp dir, no network, ~1 minute):
+
+```bash
+bash tests/run.sh
+```
+
+Try the hooks by hand without opening Claude:
 
 ```bash
 export CLAUDE_PROJECT_DIR=/path/to/test-repo
 echo '{"hook_event_name":"UserPromptSubmit","prompt":"journal test"}' | bash plugins/zoey-memory/hooks/log-prompt.sh
-bash plugins/zoey-memory/hooks/session-start.sh | python3 -m json.tool
+echo '{"hook_event_name":"SessionStart","source":"startup"}' | bash plugins/zoey-memory/hooks/session-start.sh | python3 -m json.tool
 bash plugins/zoey-memory/scripts/doctor.sh /path/to/test-repo
 ```

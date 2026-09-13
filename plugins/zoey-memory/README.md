@@ -11,12 +11,26 @@ machines.** It does not write specs and it does not do TDD - those jobs go to Op
 
 ## What is inside
 
-**2 hooks** (exit silently if the repo has no `.claude/zoey-memory.json`):
+```
+hooks/      hooks.json, session-start.sh, log-prompt.sh      thin bash: git + call into lib/
+lib/        common.sh, zoey.py, log_prompt.py, session_start.py
+            the ONE place that knows the config schema, defaults, i18n, CLAUDE.md block
+scripts/    init.sh, doctor.sh, update.sh
+commands/   init.md, start.md, handoff.md, doctor.md, update.md   -> /zoey-memory:<name>
+templates/  zoey-memory.json, CLAUDE.<lang>.md, i18n/<lang>.json
+tests/      run.sh (in the marketplace repo) - regression suite, no network
+```
+
+**2 hooks** (exit silently if the repo has no `.claude/zoey-memory.json`; the repo root is the git
+top level of the directory Claude was launched in, so launching in a subdirectory still works):
 
 | Hook | When | What |
 |---|---|---|
-| `log-prompt.sh` | session start + **every prompt you send** | Appends to `docs/memory/PROMPTS.md` (committed -> the other machine can read it) |
-| `session-start.sh` | session start | `git fetch` -> auto `pull --ff-only` when safe -> **loads into context**: last 30 prompts - latest session note - open OpenSpec changes with task progress - git log |
+| `session-start.sh` | session start (startup, resume, clear) | **1.** `git fetch` (8 s limit) -> if behind, clean and not ahead: `pull --ff-only` (20 s limit); every other case only warns. **2.** writes the session marker to the prompt journal - *after* the pull, so the journal never blocks it. **3.** loads into context: last 30 prompts - latest session note - open OpenSpec changes with task progress - git log |
+| `log-prompt.sh` | **every prompt you send** | Appends to `docs/memory/PROMPTS.md` (committed -> the other machine can read it). Machine-generated prompts are skipped; long prompts are truncated to 600 chars |
+
+SessionStart deliberately runs **one** hook: hooks on the same event run concurrently, and the
+marker must be written after the pull.
 
 **5 commands** (`/zoey-memory:<name>`):
 
@@ -25,8 +39,8 @@ machines.** It does not write specs and it does not do TDD - those jobs go to Op
 | `/zoey-memory:init [vi]` | **Enable in a repo** - openspec init, `.claude/zoey-memory.json`, `docs/memory/`, workflow block in CLAUDE.md, commit. Optional language code. |
 | `/zoey-memory:start` | Start of day: sync code + dependencies + things outside git, summarize what the other machine did |
 | `/zoey-memory:handoff` | End of day: tick OpenSpec tasks, write the session note, commit WIP, push |
-| `/zoey-memory:doctor` | Health check: detect drift after ZoeyMemory, OpenSpec or superpowers is updated |
-| `/zoey-memory:update` | Update all three on this machine, regenerate this repo's OpenSpec files, run the doctor |
+| `/zoey-memory:doctor` | Health check: detect drift after ZoeyMemory, OpenSpec or superpowers is updated. Read-only, offline |
+| `/zoey-memory:update` | Update all three on this machine, regenerate this repo's OpenSpec files, run the doctor. The only thing that touches the network |
 
 ## Four journals, never merged
 
@@ -48,8 +62,11 @@ code is passed to `openspec init --language`.
 - Switch later: re-run `init.sh --language <code>`. It updates the config and refreshes the CLAUDE.md
   block; existing journal entries are left as they are. Edit the `Language:` line in
   `openspec/config.yaml` yourself.
+- An unknown code **aborts** `init.sh` before it writes anything; it never silently falls back.
+  At runtime a missing translation file or a broken string falls back to English per key.
 - Add a language: copy `templates/i18n/en.json` to `<code>.json` and `templates/CLAUDE.en.md` to
-  `CLAUDE.<code>.md`, translate. Missing keys fall back to English.
+  `CLAUDE.<code>.md`, translate. Keep `{placeholders}` as they are and keep the example entry in
+  `sessions_header` indented.
 
 ## Staying up to date with OpenSpec and superpowers
 
@@ -67,11 +84,21 @@ What can drift, and what catches it:
 |---|---|---|
 | New openspec CLI | `.claude/commands/opsx/*` and `.claude/skills/openspec-*` in your repo are outdated | `update.sh` runs `openspec update`; `doctor.sh` checks the four commands exist |
 | OpenSpec renames `/opsx:*` | CLAUDE.md block and context hint point to old names | `doctor.sh` (missing commands) - then edit `templates/i18n/*.json` and `CLAUDE.<lang>.md` |
-| superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor.sh` compares the block's skill list against the installed cache |
+| superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor.sh` looks the install path up with `claude plugin list --json` and checks each skill |
 | ZoeyMemory template changes | Your repo's CLAUDE.md block is the old wording | `doctor.sh` diffs the block; `init.sh` refreshes it |
 
 Routine: `/zoey-memory:update` on each machine now and then, `/zoey-memory:doctor` in each repo
 after that. Both are safe to run any time.
+
+## Failure policy
+
+- No config file -> both hooks exit silently (the plugin never bothers repos that did not opt in).
+- Invalid config -> no journaling, no sync, and one warning line in the loaded context.
+- A bad translation -> that string falls back to English; a crash while rendering -> an English
+  fallback that still carries the git warnings. The hook never blocks a session.
+- Network slow or down -> `FETCH_SLOW` / `FETCH_FAILED`, no pull attempted, hook returns well inside
+  its 45 s budget. A pull that fails or stalls says so (`PULL_FAILED` / `PULL_SLOW`), it is never
+  reported as a diverged branch.
 
 ## Enable in a repo
 
@@ -91,3 +118,5 @@ Full template with inline docs: [`templates/zoey-memory.json`](templates/zoey-me
 - `git.autoPull` / `allowCommit` / `allowPush` / `workingBranch`.
 - `outsideGit.items` - things that do not travel with git; `/zoey-memory:start` checks them.
 - `forbidden.items` - things Claude must never do on its own.
+
+Keys of the wrong type fall back to their defaults.
