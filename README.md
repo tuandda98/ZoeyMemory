@@ -1,65 +1,65 @@
-# claude-kyuc — bộ làm việc với Claude Code, dùng chung cho mọi dự án
+# ZoeyMemory - a Claude Code working toolkit shared across all projects
 
-Ba bộ ghép lại, mỗi bộ một việc, không chồng nhau:
+Three tools combined, one job each, no overlap:
 
-| Việc | Bộ | Nguồn |
+| Job | Tool | Source |
 |---|---|---|
-| Ký ức giữa các phiên, giữa 2 máy | **kyuc** (plugin trong repo này) | `plugins/kyuc/` |
-| Spec, thiết kế, lý do quyết định, lịch sử | **OpenSpec** | [Fission-AI/openspec](https://github.com/Fission-AI/openspec) |
-| TDD, debug, verify, code review | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) |
+| Memory across sessions and machines | **ZoeyMemory** (plugin in this repo) | `plugins/zoey-memory/` |
+| Specs, design, reasoning behind decisions, history | **OpenSpec** | [Fission-AI/openspec](https://github.com/Fission-AI/openspec) |
+| TDD, debugging, verification, code review | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) |
 
-Chi tiết plugin kyuc: [`plugins/kyuc/README.md`](plugins/kyuc/README.md).
+Plugin details: [`plugins/zoey-memory/README.md`](plugins/zoey-memory/README.md).
 
-## Cài (mỗi máy một lần)
+## Install (once per machine)
 
 ```bash
-bash setup-may-moi.sh
+bash setup.sh
 ```
 
-Script cài cả ba: marketplace + plugin superpowers, marketplace + plugin kyuc, và openspec CLI
-(cần Node 20.19+). Chạy lại không sao.
+The script installs all three: the superpowers marketplace + plugin, the ZoeyMemory marketplace +
+plugin, and the openspec CLI (needs Node 20.19+). Safe to re-run.
 
-Cài tay:
+Manual install:
 
 ```bash
 claude plugin marketplace add obra/superpowers-marketplace
 claude plugin install superpowers@superpowers-marketplace
-claude plugin marketplace add tuandda98/claude-kyuc      # hoặc đường dẫn local tới repo này
-claude plugin install kyuc@claude-kyuc
+claude plugin marketplace add tuandda98/ZoeyMemory      # or a local path to this repo
+claude plugin install zoey-memory@zoey-memory
 npm i -g @fission-ai/openspec@latest
 ```
 
-## Bật cho một repo (mỗi repo một lần)
+## Enable in a repo (once per repo)
 
-Mở Claude Code trong repo, gõ:
+Open Claude Code in the repo and type:
 
 ```
-/kyuc:khoi-tao
+/zoey-memory:init
 ```
 
-Nó chạy `openspec init`, tạo `.claude/kyuc.json`, `docs/nhatky/`, thêm khối phân vai vào
-`CLAUDE.md`, rồi commit. Từ phiên sau hook bắt đầu ghi nhật ký và nạp ngữ cảnh.
+It runs `openspec init`, creates `.claude/zoey-memory.json` and `docs/memory/`, appends the workflow
+block to `CLAUDE.md`, then commits. From the next session on, the hooks journal and load context.
 
-## Một ngày làm việc
+## A working day
 
-1. Mở máy → hook tự pull + nạp ngữ cảnh. Đổi máy thì gõ thêm `/kyuc:dau-ca`.
-2. Việc mới đáng nhớ → `/opsx:propose <tên>` → `/opsx:apply` (superpowers TDD/verify tự bật).
-3. Xong → `/opsx:archive <tên>`.
-4. Rời máy → `/kyuc:cuoi-ca`.
+1. Open a machine -> the hook auto-pulls and loads context. Switched machines? Also run `/zoey-memory:start`.
+2. New work worth remembering -> `/opsx:propose <name>` -> `/opsx:apply` (superpowers TDD/verification trigger themselves).
+3. Done -> `/opsx:archive <name>`.
+4. Leaving -> `/zoey-memory:handoff`.
 
-## Phát triển plugin này
+## Developing this plugin
 
-Sửa file trong `plugins/kyuc/`, rồi:
+Edit files under `plugins/zoey-memory/`, then:
 
 ```bash
-claude plugin marketplace update claude-kyuc
-claude plugin install kyuc@claude-kyuc      # cài lại bản mới
+claude plugin marketplace update zoey-memory
+claude plugin install zoey-memory@zoey-memory      # reinstall the new version
 ```
 
-Thử hook không cần mở Claude:
+Try the hooks without opening Claude:
 
 ```bash
-export CLAUDE_PROJECT_DIR=/đường/dẫn/repo-test
-echo '{"hook_event_name":"UserPromptSubmit","prompt":"thử ghi nhật ký"}' | bash plugins/kyuc/hooks/ghi-nhat-ky.sh
-bash plugins/kyuc/hooks/dau-phien.sh | python3 -m json.tool
+export CLAUDE_PROJECT_DIR=/path/to/test-repo
+echo '{"hook_event_name":"UserPromptSubmit","prompt":"journal test"}' | bash plugins/zoey-memory/hooks/log-prompt.sh
+bash plugins/zoey-memory/hooks/session-start.sh | python3 -m json.tool
 ```

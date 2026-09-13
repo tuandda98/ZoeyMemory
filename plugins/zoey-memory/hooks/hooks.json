@@ -1,0 +1,34 @@
+{
+  "description": "ZoeyMemory: automatic journal + session context + two-machine sync. Every hook exits silently if the repo has no .claude/zoey-memory.json (i.e. /zoey-memory:init was never run).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/log-prompt.sh\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "timeout": 45,
+            "statusMessage": "ZoeyMemory: syncing git and loading previous context…"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/log-prompt.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

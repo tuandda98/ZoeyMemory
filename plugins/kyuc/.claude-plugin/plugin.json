@@ -1,8 +1,0 @@
-{
-  "name": "kyuc",
-  "description": "Ký ức giữa các phiên: hook tự ghi từng câu chủ dự án hỏi vào docs/nhatky/, tự nạp ngữ cảnh đầu phiên (câu hỏi gần đây + nhật ký phiên + change OpenSpec đang mở + git log), tự pull khi an toàn. Chạy /kyuc:khoi-tao trong repo mới để bật.",
-  "version": "0.1.0",
-  "author": {
-    "name": "Đỗ Đào Anh Tuấn"
-  }
-}
