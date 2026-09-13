@@ -1,0 +1,15 @@
+{
+  "name": "claude-kyuc",
+  "description": "Ký ức giữa các phiên và giữa hai máy cho Claude Code — ghép với OpenSpec (spec) và superpowers (chất lượng code). Dùng chung cho mọi dự án của Tuấn.",
+  "owner": {
+    "name": "Đỗ Đào Anh Tuấn"
+  },
+  "plugins": [
+    {
+      "name": "kyuc",
+      "source": "./plugins/kyuc",
+      "description": "Nhật ký câu hỏi tự động + nạp ngữ cảnh đầu phiên + đồng bộ 2 máy. Spec giao OpenSpec, chất lượng code giao superpowers.",
+      "version": "0.1.0"
+    }
+  ]
+}
