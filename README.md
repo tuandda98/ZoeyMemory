@@ -12,22 +12,25 @@ Plugin details, language support and the update/drift policy: [`plugins/zoey-mem
 
 ## Install (once per machine)
 
-```bash
-bash setup.sh
-```
-
-The script installs all three: the superpowers marketplace + plugin, the ZoeyMemory marketplace +
-plugin, and the openspec CLI (needs Node 20.19+). Safe to re-run.
-
-Manual install:
+ZoeyMemory declares **superpowers as a plugin dependency**, so one install pulls both in. The only
+prerequisite is that the superpowers marketplace is known to Claude Code (a security rule: Claude
+Code never auto-adds a marketplace you have not reviewed).
 
 ```bash
-claude plugin marketplace add obra/superpowers-marketplace
-claude plugin install superpowers@superpowers-marketplace
-claude plugin marketplace add tuandda98/ZoeyMemory      # or a local path to this repo
-claude plugin install zoey-memory@zoey-memory
-npm i -g @fission-ai/openspec@latest
+claude plugin marketplace add obra/superpowers-marketplace   # once; makes the dependency resolvable
+claude plugin marketplace add tuandda98/ZoeyMemory            # or a local path to this repo
+claude plugin install zoey-memory@zoey-memory                 # installs zoey-memory + superpowers
 ```
+
+The openspec CLI (needs Node 20.19+) is installed by `/zoey-memory:init` the first time it is
+missing, or by `npm i -g @fission-ai/openspec@latest`.
+
+`bash setup.sh` does all of the above in one go and is safe to re-run.
+
+Because of the dependency, `claude plugin disable superpowers@...` is refused while ZoeyMemory is
+enabled; disable both together with the chained command Claude Code prints, or just disable
+ZoeyMemory. `claude plugin uninstall zoey-memory --prune` removes superpowers too if nothing else
+needs it.
 
 ## Enable in a repo (once per repo)
 
