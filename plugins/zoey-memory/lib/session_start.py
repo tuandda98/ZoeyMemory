@@ -49,6 +49,21 @@ def sh(root, *cmd):
         return ""
 
 
+SESSION_NOTE_MAX = 3000
+
+
+def clip_middle(text, t, path):
+    """Cut an over-long session note in the MIDDLE. The shape puts 'what the other machine needs to
+    know' last, so a head-only cut drops exactly the part the next machine needs most."""
+    if len(text) <= SESSION_NOTE_MAX:
+        return text
+    head = SESSION_NOTE_MAX // 3
+    tail = SESSION_NOTE_MAX - head
+    cut = len(text) - head - tail
+    return (text[:head].rstrip() + "\n" + t.get("note_clipped", n=cut, path=path) + "\n"
+            + text[-tail:].lstrip())
+
+
 def parse_events(events):
     out = []
     for ev in events.splitlines():
@@ -94,21 +109,35 @@ def render(root, cfg_path, i18n_dir, events):
         return
 
     # 1. What the user asked recently (old journals may still contain machine noise: filter here too).
+    #    A "> " line right under a prompt is the recorded outcome/decision for it: load it WITH the
+    #    prompt, otherwise the one place decisions are told to go is never seen again.
     asks = []
+    cur = None
     for ln in zoey.read_text(os.path.join(root, p_rel)).splitlines():
         m = re.match(r"^- \[(\d{2}:\d{2})\] (.+)$", ln)
-        if not m or zoey.is_noise(m.group(2)):
+        if m:
+            if zoey.is_noise(m.group(2)):
+                cur = None
+                continue
+            cur = ["[%s] %s" % (m.group(1), m.group(2).strip()[:200])]
+            asks.append(cur)
             continue
-        asks.append("[%s] %s" % (m.group(1), m.group(2).strip()[:200]))
+        if ln.startswith("## "):
+            cur = None  # a session marker ends the previous prompt's notes
+            continue
+        note = re.match(r"^\s*>\s?(.*)$", ln)
+        if note and cur is not None and note.group(1).strip():
+            cur.append("  > " + note.group(1).strip()[:200])
     if asks:
-        parts.append(t.get("asks_title", n=n_prompts, path=p_rel) + "\n" + "\n".join(asks[-n_prompts:]))
+        parts.append(t.get("asks_title", n=n_prompts, path=p_rel) + "\n"
+                     + "\n".join("\n".join(a) for a in asks[-n_prompts:]))
 
     # 2. Latest session note. Entries are "## " headings at column 0; the header's example is
     #    indented so it is not one, and "YYYY" is skipped as a second guard.
     blocks = [b.strip() for b in re.split(r"(?m)^(?=## )", zoey.read_text(os.path.join(root, s_rel)))
               if b.strip().startswith("## ") and "YYYY" not in b.splitlines()[0]]
     if blocks:
-        parts.append(t.get("session_title", path=s_rel) + "\n" + blocks[-1][:1500])
+        parts.append(t.get("session_title", path=s_rel) + "\n" + clip_middle(blocks[-1], t, s_rel))
 
     # 3. OpenSpec: open changes with task progress. Filesystem only - a CLI change cannot break this.
     os_dir = os.path.join(root, "openspec")

@@ -170,7 +170,7 @@ launched in, so launching in a subdirectory works.
 
 | Hook | Event | What it does |
 |---|---|---|
-| `session-start.sh` | SessionStart (startup, resume, `/clear`) | **1. Sync:** `git fetch` with an 8 s limit; if behind the upstream, the tree is clean and nothing is unpushed, `git pull --ff-only` with a 20 s limit. Every other situation only warns (dirty tree, diverged, unpushed, fetch failed, pull failed or stalled). **2. Marker:** writes the "new session" line to the prompt journal - after the pull, so the journal never blocks it. **3. Context:** loads the last 30 prompts, the latest session note, open OpenSpec changes with task progress, and the last 8 commits, in the configured language. |
+| `session-start.sh` | SessionStart (startup, resume, `/clear`; after `compact` it only re-loads the context - no sync, no marker) | **1. Sync:** `git fetch` with an 8 s limit; if behind the upstream, no tracked file has uncommitted changes (untracked files do not count) and nothing is unpushed, `git pull --ff-only` with a 20 s limit. Every other situation only warns (dirty tree, diverged, unpushed, fetch failed, pull failed or stalled). **2. Marker:** writes the "new session" line to the prompt journal - after the pull, so the journal never blocks it. **3. Context:** loads the last 30 prompts with their `> ` notes, the latest session note (an over-long one is cut in the middle so its head and its tail both survive), open OpenSpec changes with task progress, and the last 8 commits, in the configured language. |
 | `log-prompt.sh` | UserPromptSubmit | Appends `- [HH:MM] <prompt>` to `docs/memory/PROMPTS.md`. Skips machine-generated prompts, truncates at 600 characters. |
 
 SessionStart deliberately runs a single hook: hooks on the same event run concurrently, and the
@@ -190,7 +190,8 @@ They answer four different questions. Do not merge them.
 | `openspec/changes/<name>/` and `openspec/changes/archive/` | *what, why, is it done* | OpenSpec |
 | `git log` | *which lines of code changed* | commits |
 
-To note the outcome of a prompt, add a `> ` line right under it in `PROMPTS.md`. To record why
+To note the outcome of a prompt, add a `> ` line right under it in `PROMPTS.md` - it is loaded together
+with that prompt at session start. To record why
 something was decided, use OpenSpec - that is what `proposal.md` and `design.md` are for.
 
 ---
@@ -203,6 +204,7 @@ documentation: [`plugins/zoey-memory/templates/zoey-memory.json`](plugins/zoey-m
 | Key | Default | Meaning |
 |---|---|---|
 | `language` | `"en"` | Language of everything you read (see [Language](#language)). |
+| `timezone` | `""` | IANA zone for journal timestamps (e.g. `Asia/Ho_Chi_Minh`). Empty = the machine's local time. Journals only carry HH:MM, so set it when machines (or containers) differ in zone. `doctor` warns about an unknown name. |
 | `journal.enabled` | `true` | Automatic prompt journaling. |
 | `journal.prompts` / `journal.sessions` | `docs/memory/PROMPTS.md` / `SESSIONS.md` | Journal paths, relative to the repo root. Point them at an existing file to keep an older journal going. The CLAUDE.md block names them too: re-run `init` after changing them (`doctor` flags the drift). |
 | `context.enabled` | `true` | Load context at session start. Sync warnings are shown even when off. |
@@ -267,7 +269,8 @@ after that. Auto-update is off by default for non-Anthropic marketplaces; enable
 - Invalid config: no journaling, no sync, one warning line in the loaded context.
 - Network slow or down: `FETCH_SLOW` / `FETCH_FAILED`, no pull attempted, hook returns in seconds.
 - Pull fails or stalls: `PULL_FAILED` / `PULL_SLOW`, never misreported as a diverged branch.
-- Dirty tree or unpushed commits: warned, never touched. The plugin never stashes, rebases, merges,
+- Uncommitted changes to tracked files, or unpushed commits: warned, never touched (untracked files alone
+  do not block the pull - git itself refuses if an incoming file would overwrite one). The plugin never stashes, rebases, merges,
   deploys or pushes on its own; only `/zoey-memory:handoff` commits and pushes, and only if the
   config allows it.
 - Bad translation: that string falls back to English. Crash while rendering: an English fallback

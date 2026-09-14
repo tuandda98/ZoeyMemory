@@ -55,6 +55,11 @@ else
     elif [ -f "$f" ]; then warn "$key -> $f is EMPTY (re-run /zoey-memory:init to write the header)"
     else warn "$key -> $f missing (re-run /zoey-memory:init; the prompt journal is also created on first write)"; fi
   done
+  tz="$(python3 "$ZOEY" get "$CFG" timezone "" 2>/dev/null)"
+  if [ -n "$tz" ]; then
+    if [ -f "/usr/share/zoneinfo/$tz" ]; then ok "timezone $tz (journal timestamps)"
+    else warn "timezone '$tz' is not a known zone (no /usr/share/zoneinfo/$tz) - journal times silently fall back to UTC"; fi
+  fi
   [ -f .claude/flow.json ] && warn ".claude/flow.json present - the old 'flow' plugin also journals prompts; disable one of them to avoid double logging"
 fi
 

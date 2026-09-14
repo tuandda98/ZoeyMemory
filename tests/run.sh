@@ -183,6 +183,39 @@ setcfg "$CP" 'c["journal"]["prompts"]=123'
 t "wrong-typed journal path -> default, same as the hooks" '[ "$(python3 "$ZOEY" paths "$CP/.claude/zoey-memory.json" | head -1)" = docs/memory/PROMPTS.md ]'
 t "block-check without a cfg arg still works (schema defaults)" 'python3 "$ZOEY" block-check "$R/CLAUDE.md" "$P/templates/CLAUDE.en.md"'
 
+echo; echo "# 0.4.3: untracked files, compact, long notes, timezone, '> ' notes"
+export U="$T/u"; mkrepo "$U"; bash "$S/init.sh" "$U" >/dev/null 2>&1
+git -C "$U" add -A && git -C "$U" commit -qm enable
+git init -q --bare "$T/u-origin.git"; git -C "$U" remote add origin "$T/u-origin.git"; git -C "$U" push -q -u origin main
+git clone -q "$T/u-origin.git" "$T/u-other" && git -C "$T/u-other" commit -q --allow-empty -m "from other" && git -C "$T/u-other" push -q origin main
+mkdir -p "$U/.qoder" && printf '{}' > "$U/.qoder/settings.local.json"
+export C="$(ctx "$U")"
+t "untracked file only -> still PULLED" 'printf "%s" "$C" | grep -q "brought in 1 new commit" && [ "$(git -C "$U" rev-list --count HEAD..origin/main)" = 0 ]'
+git -C "$U" add docs && git -C "$U" commit -qm j && git -C "$U" push -q origin main
+git -C "$T/u-other" pull -q && git -C "$T/u-other" commit -q --allow-empty -m "from other 2" && git -C "$T/u-other" push -q origin main
+export HB="$(git -C "$U" rev-parse HEAD)" NM="$(grep -c '^## New session' "$U/docs/memory/PROMPTS.md")"
+export C="$( (cd "$U" && CLAUDE_PROJECT_DIR="$U" bash "$H/session-start.sh" <<<'{"hook_event_name":"SessionStart","source":"compact"}' 2>/dev/null) | python3 -c 'import json,sys
+raw=sys.stdin.read().strip()
+print(json.loads(raw)["hookSpecificOutput"]["additionalContext"] if raw else "")')"
+t "compact -> context re-loaded, no pull, no new session marker" 'printf "%s" "$C" | grep -q "## Git" && [ "$(git -C "$U" rev-parse HEAD)" = "$HB" ] && [ "$(grep -c "^## New session" "$U/docs/memory/PROMPTS.md")" = "$NM" ]'
+t "hooks.json: SessionStart matcher includes compact" 'python3 -c "import json;m=json.load(open(\"$H/hooks.json\"))[\"hooks\"][\"SessionStart\"][0][\"matcher\"];raise SystemExit(0 if \"compact\" in m.split(\"|\") else 1)"'
+python3 - "$U/docs/memory/SESSIONS.md" <<'PY'
+import sys
+open(sys.argv[1], "a").write("\n## 2026-02-02 10:00 - branch `main` - machine B\n- In progress: HEAD-MARK\n- filler "
+                             + "x" * 5000 + "\n- The other machine needs to know: TAIL-MARK\n")
+PY
+export C="$(ctx "$U")"
+t "long session note keeps head AND tail, says where the cut is" 'printf "%s" "$C" | grep -q HEAD-MARK && printf "%s" "$C" | grep -q TAIL-MARK && printf "%s" "$C" | grep -q "cut from the middle"'
+setcfg "$U" 'c["timezone"]="Asia/Ho_Chi_Minh"'
+export VN1="$(TZ=Asia/Ho_Chi_Minh date +%H:%M)"; (export TZ=UTC; prompt "$U" "tz-probe"); export VN2="$(TZ=Asia/Ho_Chi_Minh date +%H:%M)"
+t "timezone config -> journal time in that zone, not the machine's (TZ=UTC here)" 'l="$(grep "tz-probe" "$U/docs/memory/PROMPTS.md")"; [ "$l" = "- [$VN1] tz-probe" ] || [ "$l" = "- [$VN2] tz-probe" ]'
+setcfg "$U" 'c["timezone"]="Nowhere/Nope"'
+export D="$(bash "$S/doctor.sh" "$U" 2>&1)"
+t "doctor warns about an unknown timezone" 'printf "%s" "$D" | grep -q "not a known zone"'
+printf -- '- [10:00] ask-with-note\n> decided: use plan B\n- [10:01] <task-notification>x\n> NOT-ATTACHED\n' >> "$U/docs/memory/PROMPTS.md"
+export C="$(ctx "$U")"
+t "'> ' note under a prompt is loaded with it; a note under noise is not" 'printf "%s" "$C" | grep -q "ask-with-note" && printf "%s" "$C" | grep -q "> decided: use plan B" && ! printf "%s" "$C" | grep -q NOT-ATTACHED'
+
 echo
 echo "passed=$PASS failed=$FAIL"
 [ "$FAIL" -eq 0 ]
