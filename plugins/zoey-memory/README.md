@@ -86,6 +86,7 @@ What can drift, and what catches it:
 | OpenSpec renames `/opsx:*` | CLAUDE.md block and context hint point to old names | `doctor.sh` (missing commands) - then edit `templates/i18n/*.json` and `CLAUDE.<lang>.md` |
 | superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor.sh` looks the install path up with `claude plugin list --json` and checks each skill |
 | ZoeyMemory template changes | Your repo's CLAUDE.md block is the old wording | `doctor.sh` diffs the block; `init.sh` refreshes it |
+| You change `journal.prompts` / `journal.sessions` | The CLAUDE.md block still names the old paths (it is rendered from `{prompts}` / `{sessions}`) | `doctor.sh` diffs the block against the template rendered with your config; `init.sh` refreshes it |
 
 Routine: `/zoey-memory:update` on each machine now and then, `/zoey-memory:doctor` in each repo
 after that. Both are safe to run any time.

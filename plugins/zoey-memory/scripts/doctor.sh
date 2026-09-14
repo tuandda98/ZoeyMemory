@@ -35,6 +35,9 @@ echo
 # ---- 1. ZoeyMemory config ----
 echo "## ZoeyMemory"
 LANG_CODE=en
+# Journal paths exactly as the hooks resolve them - reused by the git and CLAUDE.md checks.
+J_PATHS="$(python3 "$ZOEY" paths "$CFG" 2>/dev/null)"
+J_PROMPTS="$(printf '%s\n' "$J_PATHS" | sed -n 1p)"; J_SESSIONS="$(printf '%s\n' "$J_PATHS" | sed -n 2p)"
 if [ ! -f "$CFG" ]; then
   warn "no .claude/zoey-memory.json - ZoeyMemory is not enabled here. Run /zoey-memory:init"
 elif ! reason="$(python3 "$ZOEY" validate "$CFG" 2>&1)"; then
@@ -47,7 +50,7 @@ else
     warn "language: $lang - hooks fall back to en until fixed"
   fi
   for key in journal.prompts journal.sessions; do
-    f="$(python3 "$ZOEY" get "$CFG" "$key" "$(python3 "$ZOEY" get "$TPL/zoey-memory.json" "$key")" 2>/dev/null)"
+    if [ "$key" = journal.prompts ]; then f="$J_PROMPTS"; else f="$J_SESSIONS"; fi
     if [ -s "$f" ]; then ok "$key -> $f"
     elif [ -f "$f" ]; then warn "$key -> $f is EMPTY (re-run /zoey-memory:init to write the header)"
     else warn "$key -> $f missing (re-run /zoey-memory:init; the prompt journal is also created on first write)"; fi
@@ -60,7 +63,7 @@ echo; echo "## git"
 if zoey_in_git "$ROOT"; then
   up="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
   [ -n "$up" ] && ok "upstream $up (two-machine sync can work)" || warn "no upstream for the current branch - the session-start hook cannot auto-pull or warn about unpushed commits (git push -u origin <branch>)"
-  for f in .claude/zoey-memory.json docs/memory CLAUDE.md openspec; do
+  for f in .claude/zoey-memory.json "$J_PROMPTS" "$J_SESSIONS" CLAUDE.md openspec; do
     [ -e "$f" ] || continue
     git check-ignore -q "$f" 2>/dev/null && warn "$f is git-ignored - it will NOT reach the other machine" || true
   done
@@ -130,9 +133,9 @@ BLOCK_TPL="$TPL/CLAUDE.$LANG_CODE.md"; [ -f "$BLOCK_TPL" ] || BLOCK_TPL="$TPL/CL
 if [ ! -f CLAUDE.md ]; then
   warn "no CLAUDE.md - the division-of-labor rules are not loaded (run /zoey-memory:init)"
 else
-  case "$(python3 "$ZOEY" block-check CLAUDE.md "$BLOCK_TPL" 2>/dev/null)" in
-    ok)      ok "CLAUDE.md block matches the template for '$LANG_CODE'" ;;
-    differs) warn "CLAUDE.md block differs from the template (plugin updated, or language changed) - run: bash <plugin>/scripts/init.sh to refresh it" ;;
+  case "$(python3 "$ZOEY" block-check CLAUDE.md "$BLOCK_TPL" "$CFG" 2>/dev/null)" in
+    ok)      ok "CLAUDE.md block matches the template for '$LANG_CODE' (journal paths: $J_PROMPTS, $J_SESSIONS)" ;;
+    differs) warn "CLAUDE.md block differs from the template (plugin updated, language changed, or journal paths changed) - run: bash <plugin>/scripts/init.sh to refresh it" ;;
     missing) warn "CLAUDE.md has no ZoeyMemory block - run /zoey-memory:init" ;;
     *)       warn "CLAUDE.md has a broken ZoeyMemory block (one marker without the other) - fix the markers by hand" ;;
   esac
