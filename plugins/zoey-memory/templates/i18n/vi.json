@@ -23,6 +23,7 @@
 
   "asks_title": "## Chủ dự án đã nhờ gì gần đây ({n} câu cuối, nguồn {path})",
   "session_title": "## Nhật ký phiên gần nhất (nguồn {path})",
+  "note_clipped": "[... cắt {n} ký tự ở giữa mục này - đọc đủ trong {path} ...]",
 
   "openspec_open_title": "## OpenSpec - change đang mở (nguồn openspec/changes/)",
   "openspec_row": "- `{name}` - {progress} - đã có: {artifacts}",

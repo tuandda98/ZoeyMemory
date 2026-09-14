@@ -39,6 +39,14 @@ if [ $? -eq 2 ]; then
   AUTO_PULL=false
 fi
 
+# `compact` = the same session, context just got summarized: re-load the context only. No sync
+# (files must not change under a running session) and no "new session" marker (it is not one).
+SOURCE=""
+[ -n "$INPUT_FILE" ] && SOURCE="$(python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get("source", ""))
+except Exception: print("")' "$INPUT_FILE" 2>/dev/null)"
+[ "$SOURCE" = compact ] && AUTO_PULL=false
+
 # ---------- 1. sync ----------
 if [ "$AUTO_PULL" != "false" ] && [ "$AUTO_PULL" != "0" ] && zoey_in_git "$ROOT"; then
   fetch_ok=1
@@ -53,7 +61,10 @@ if [ "$AUTO_PULL" != "false" ] && [ "$AUTO_PULL" != "0" ] && zoey_in_git "$ROOT"
     counts="$(git rev-list --left-right --count 'HEAD...@{upstream}' 2>/dev/null || true)"
     ahead="$(printf '%s' "$counts" | awk '{print $1}')"; behind="$(printf '%s' "$counts" | awk '{print $2}')"
     ahead="${ahead:-0}"; behind="${behind:-0}"
-    dirty="$(git status --porcelain 2>/dev/null | head -1)"
+    # Tracked changes only: an untracked file (local tool config, build output) cannot be lost by
+    # `pull --ff-only` - git refuses on its own if an incoming file would overwrite one, and that
+    # surfaces as PULL_FAILED. Counting them would block the auto-pull forever on such a machine.
+    dirty="$(git status --porcelain --untracked-files=no 2>/dev/null | head -1)"
     if [ "$behind" -gt 0 ]; then
       if [ -n "$dirty" ]; then
         emit "DIRTY${TAB}${behind}${TAB}${upstream}"
@@ -76,7 +87,7 @@ if [ "$AUTO_PULL" != "false" ] && [ "$AUTO_PULL" != "0" ] && zoey_in_git "$ROOT"
 fi
 
 # ---------- 2. session marker (after the pull) ----------
-if [ -n "$INPUT_FILE" ] && [ -s "$INPUT_FILE" ]; then
+if [ -n "$INPUT_FILE" ] && [ -s "$INPUT_FILE" ] && [ "$SOURCE" != compact ]; then
   python3 "$PLUGIN/lib/log_prompt.py" "$ROOT" "$CFG" "$PLUGIN/templates/i18n" < "$INPUT_FILE" 2>/dev/null
 fi
 [ -n "$INPUT_FILE" ] && rm -f "$INPUT_FILE"

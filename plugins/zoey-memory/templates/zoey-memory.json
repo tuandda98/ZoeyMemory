@@ -6,6 +6,9 @@
   "_language": "Language of everything the user reads: journals, loaded context, CLAUDE.md block, session notes, reports. Must match a file in templates/i18n/ (en, vi). Also passed to `openspec init --language`. Plugin source code stays English regardless.",
   "language": "en",
 
+  "_timezone": "IANA zone for journal timestamps, e.g. Asia/Ho_Chi_Minh. Empty = the machine's local time. Journals only carry HH:MM, so two machines in different zones would interleave out of order - set it when you work on more than one machine.",
+  "timezone": "",
+
   "journal": {
     "_": "prompts: the hook logs every user prompt here (COMMITTED). sessions: /zoey-memory:handoff writes 'what is in progress, why we stopped, who decides what'. enabled=false turns automatic logging off.",
     "enabled": true,

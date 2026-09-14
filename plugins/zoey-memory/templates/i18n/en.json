@@ -23,6 +23,7 @@
 
   "asks_title": "## What the user asked recently (last {n}, source {path})",
   "session_title": "## Latest session note (source {path})",
+  "note_clipped": "[... {n} characters cut from the middle of this note - read it in full in {path} ...]",
 
   "openspec_open_title": "## OpenSpec - open changes (source openspec/changes/)",
   "openspec_row": "- `{name}` - {progress} - present: {artifacts}",

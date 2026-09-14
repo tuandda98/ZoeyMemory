@@ -33,6 +33,7 @@ def main():
 
     lang, _ = zoey.resolve_lang(cfg, i18n_dir)
     t = zoey.I18n(i18n_dir, lang or "en")
+    zoey.apply_timezone(cfg)
     now = datetime.datetime.now()
     event = data.get("hook_event_name", "")
 

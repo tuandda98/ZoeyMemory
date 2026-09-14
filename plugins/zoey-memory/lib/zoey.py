@@ -30,9 +30,11 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 DEFAULTS = {
     "language": "en",
+    "timezone": "",
     "journal": {"enabled": True, "prompts": "docs/memory/PROMPTS.md", "sessions": "docs/memory/SESSIONS.md"},
     "context": {"enabled": True, "recentPrompts": 30},
     "git": {"autoPull": True, "allowCommit": True, "allowPush": True, "workingBranch": "main"},
@@ -102,6 +104,17 @@ def cfg_value(cfg, dotted):
 
 def journal_paths(cfg):
     return cfg_value(cfg, "journal.prompts"), cfg_value(cfg, "journal.sessions")
+
+
+def apply_timezone(cfg):
+    """Make local time follow `timezone` (IANA name) instead of the machine's zone. Journals only
+    carry HH:MM, so two machines in different zones would interleave out of order. Empty = no-op.
+    An unknown name makes the C library fall back to UTC; doctor.sh warns about that."""
+    tz = cfg_value(cfg, "timezone")
+    if tz:
+        os.environ["TZ"] = tz
+        if hasattr(time, "tzset"):
+            time.tzset()
 
 
 def strip_doc_keys(o):

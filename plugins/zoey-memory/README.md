@@ -26,7 +26,7 @@ top level of the directory Claude was launched in, so launching in a subdirector
 
 | Hook | When | What |
 |---|---|---|
-| `session-start.sh` | session start (startup, resume, clear) | **1.** `git fetch` (8 s limit) -> if behind, clean and not ahead: `pull --ff-only` (20 s limit); every other case only warns. **2.** writes the session marker to the prompt journal - *after* the pull, so the journal never blocks it. **3.** loads into context: last 30 prompts - latest session note - open OpenSpec changes with task progress - git log |
+| `session-start.sh` | session start (startup, resume, clear; compact = context only) | **1.** `git fetch` (8 s limit) -> if behind, no uncommitted tracked changes and not ahead: `pull --ff-only` (20 s limit); every other case only warns. **2.** writes the session marker to the prompt journal - *after* the pull, so the journal never blocks it. **3.** loads into context: last 30 prompts with their `> ` notes - latest session note (cut in the middle if over-long) - open OpenSpec changes with task progress - git log |
 | `log-prompt.sh` | **every prompt you send** | Appends to `docs/memory/PROMPTS.md` (committed -> the other machine can read it). Machine-generated prompts are skipped; long prompts are truncated to 600 chars |
 
 SessionStart deliberately runs **one** hook: hooks on the same event run concurrently, and the
@@ -114,6 +114,7 @@ Or run only the mechanical part by hand: `bash <plugin>/scripts/init.sh [--langu
 Full template with inline docs: [`templates/zoey-memory.json`](templates/zoey-memory.json). Summary:
 
 - `language` - `en` (default) or `vi`; any code with a `templates/i18n/<code>.json` file.
+- `timezone` - IANA zone for journal timestamps (e.g. `Asia/Ho_Chi_Minh`); empty = the machine's local time.
 - `journal.prompts` / `journal.sessions` - paths of the two journals. `journal.enabled=false` turns automatic logging off.
 - `context.enabled` / `context.recentPrompts` - whether to load context at session start, and how many prompts.
 - `git.autoPull` / `allowCommit` / `allowPush` / `workingBranch`.
