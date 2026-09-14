@@ -116,7 +116,8 @@ What it does, idempotently:
 3. Writes `.claude/zoey-memory.json` (the only file the hooks read) with the chosen language.
 4. Creates `docs/memory/PROMPTS.md` and `docs/memory/SESSIONS.md` with localized headers.
 5. Appends the plugin-owned block to `CLAUDE.md` (between `<!-- zoey-memory:start/end -->` markers;
-   re-running refreshes only that block).
+   re-running refreshes only that block). The block names your real journal paths: `{prompts}` and
+   `{sessions}` in the template are filled from `journal.*` in the config.
 6. Adds `.claude/settings.local.json` to `.gitignore`, checks that superpowers is installed.
 7. Claude then fills `outsideGit` and `forbidden` in the config from what is actually in the repo,
    and commits everything.
@@ -203,7 +204,7 @@ documentation: [`plugins/zoey-memory/templates/zoey-memory.json`](plugins/zoey-m
 |---|---|---|
 | `language` | `"en"` | Language of everything you read (see [Language](#language)). |
 | `journal.enabled` | `true` | Automatic prompt journaling. |
-| `journal.prompts` / `journal.sessions` | `docs/memory/PROMPTS.md` / `SESSIONS.md` | Journal paths, relative to the repo root. |
+| `journal.prompts` / `journal.sessions` | `docs/memory/PROMPTS.md` / `SESSIONS.md` | Journal paths, relative to the repo root. Point them at an existing file to keep an older journal going. The CLAUDE.md block names them too: re-run `init` after changing them (`doctor` flags the drift). |
 | `context.enabled` | `true` | Load context at session start. Sync warnings are shown even when off. |
 | `context.recentPrompts` | `30` | How many recent prompts to load. |
 | `git.autoPull` | `true` | Fetch and fast-forward pull at session start. |
@@ -231,7 +232,8 @@ language Claude uses for session notes and reports. The same code is passed to
 - An unknown code aborts `init` before it writes anything. At runtime a missing translation file or
   a broken string falls back to English per key.
 - Add a language: copy `templates/i18n/en.json` to `<code>.json` and `templates/CLAUDE.en.md` to
-  `CLAUDE.<code>.md`, translate, keep the `{placeholders}` and keep the example entry in
+  `CLAUDE.<code>.md`, translate, keep the `{placeholders}` (in the CLAUDE block: `{prompts}` and
+  `{sessions}`, filled from the config's journal paths) and keep the example entry in
   `sessions_header` indented. Ships with `en` and `vi`.
 
 ---
@@ -251,6 +253,7 @@ ZoeyMemory depends on OpenSpec and superpowers loosely, on purpose:
 | OpenSpec renames `/opsx:*` | CLAUDE.md block and context hint name old commands | `doctor` (missing commands) - then edit `templates/i18n/*.json` and `CLAUDE.<lang>.md` |
 | superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor` looks the install path up with `claude plugin list --json` and checks each skill |
 | ZoeyMemory template changes | Your repo's CLAUDE.md block has the old wording | `doctor` diffs the block; `init` refreshes it |
+| You change `journal.*` paths | The CLAUDE.md block still names the old paths | `doctor` diffs against the template rendered with your config; `init` refreshes it |
 
 Routine: `/zoey-memory:update` on each machine now and then, `/zoey-memory:doctor` in each repo
 after that. Auto-update is off by default for non-Anthropic marketplaces; enable it for

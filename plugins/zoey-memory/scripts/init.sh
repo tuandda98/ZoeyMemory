@@ -100,8 +100,8 @@ else
 fi
 
 # 5. docs/memory/ - headers come from i18n so hooks and init agree; never write an empty file
-PROMPTS="$(python3 "$ZOEY" get "$CFG" journal.prompts docs/memory/PROMPTS.md)"
-SESSIONS="$(python3 "$ZOEY" get "$CFG" journal.sessions docs/memory/SESSIONS.md)"
+J_PATHS="$(python3 "$ZOEY" paths "$CFG")"   # resolved exactly as the hooks do
+PROMPTS="$(printf '%s\n' "$J_PATHS" | sed -n 1p)"; SESSIONS="$(printf '%s\n' "$J_PATHS" | sed -n 2p)"
 write_journal() {  # <path> <i18n key>
   local content
   if [ -s "$1" ]; then skip "$1 already present"; return; fi
@@ -115,9 +115,11 @@ write_journal() {  # <path> <i18n key>
 write_journal "$PROMPTS" prompts_header
 write_journal "$SESSIONS" sessions_header
 
-# 6. CLAUDE.md - plugin-owned block between markers: append if missing, refresh if different
+# 6. CLAUDE.md - plugin-owned block between markers: append if missing, refresh if different.
+#    {prompts}/{sessions} in the template are filled from the config, so a repo with custom
+#    journal paths gets its real paths in the block (re-run init after changing them).
 BLOCK_TPL="$TPL/CLAUDE.$LANG_CODE.md"; [ -f "$BLOCK_TPL" ] || BLOCK_TPL="$TPL/CLAUDE.en.md"
-status="$(python3 "$ZOEY" block CLAUDE.md "$BLOCK_TPL" 2>/dev/null)"
+status="$(python3 "$ZOEY" block CLAUDE.md "$BLOCK_TPL" "$CFG" 2>/dev/null)"
 case "$status" in
   added)      ok "CLAUDE.md += ZoeyMemory block (ZoeyMemory / OpenSpec / superpowers division of labor)" ;;
   refreshed)  ok "CLAUDE.md block refreshed from template" ;;

@@ -61,12 +61,14 @@ PY'
 t "hooks.json: SessionStart runs only session-start.sh" 'python3 -c "import json;h=json.load(open(\"$H/hooks.json\"))[\"hooks\"][\"SessionStart\"][0][\"hooks\"];raise SystemExit(0 if len(h)==1 and \"session-start.sh\" in h[0][\"command\"] else 1)"'
 t "doctor makes no network calls" '! grep -qE "npm view|curl |wget " "$S/doctor.sh"'
 t "sessions_header example is not a column-0 heading" 'python3 -c "import json;s=json.load(open(\"$I18N/en.json\"))[\"sessions_header\"];raise SystemExit(1 if any(l.startswith(\"## \") for l in s.splitlines()) else 0)"'
+t "CLAUDE.<lang>.md templates use {prompts}/{sessions}, no hardcoded journal path" 'for f in "$P"/templates/CLAUDE.*.md; do grep -q "{prompts}" "$f" && grep -q "{sessions}" "$f" && ! grep -q "docs/memory" "$f" || exit 1; done'
 
 echo; echo "# init"
 export R="$T/en"; mkrepo "$R"
 bash "$S/init.sh" "$R" >/dev/null 2>&1
 t "init creates config/journals/block" '[ -s "$R/.claude/zoey-memory.json" ] && [ -s "$R/docs/memory/PROMPTS.md" ] && [ -s "$R/docs/memory/SESSIONS.md" ] && grep -q "zoey-memory:start" "$R/CLAUDE.md"'
 t "init sets language en" '[ "$(python3 "$ZOEY" get "$R/.claude/zoey-memory.json" language)" = en ]'
+t "block rendered with the default journal paths, no raw placeholder left" 'grep -q "docs/memory/PROMPTS.md" "$R/CLAUDE.md" && grep -q "docs/memory/SESSIONS.md" "$R/CLAUDE.md" && ! grep -q "{prompts}\|{sessions}" "$R/CLAUDE.md"'
 export OUT="$(bash "$S/init.sh" "$R" 2>&1)"
 t "init is idempotent (no OK lines except tool checks)" '! printf "%s" "$OUT" | grep -E "^OK " | grep -vE "openspec CLI|superpowers" | grep -q .'
 t "--language without value aborts (no infinite loop)" '! (cd "$T" && bash "$S/init.sh" --language)'
@@ -164,6 +166,22 @@ t "doctor reports the broken block" 'printf "%s" "$D" | grep -q "broken ZoeyMemo
 : > "$R/docs/memory/SESSIONS.md"
 export D="$(bash "$S/doctor.sh" "$R" 2>&1)"
 t "doctor flags an EMPTY journal file" 'printf "%s" "$D" | grep -q "is EMPTY"'
+
+echo; echo "# custom journal paths"
+export CP="$T/custom"; mkrepo "$CP"
+mkdir -p "$CP/.claude" && printf '{"language":"en","journal":{"prompts":"notes/HISTORY.md","sessions":"notes/SESSIONS.md"}}' > "$CP/.claude/zoey-memory.json"
+bash "$S/init.sh" "$CP" >/dev/null 2>&1
+t "custom paths: init writes the journals there and renders them into the block" '[ -s "$CP/notes/HISTORY.md" ] && [ -s "$CP/notes/SESSIONS.md" ] && [ ! -e "$CP/docs" ] && grep -q "notes/HISTORY.md" "$CP/CLAUDE.md" && grep -q "notes/SESSIONS.md" "$CP/CLAUDE.md" && ! grep -q "docs/memory" "$CP/CLAUDE.md"'
+export D="$(bash "$S/doctor.sh" "$CP" 2>&1)"
+t "doctor: custom-path block matches" 'printf "%s" "$D" | grep -q "block matches.*notes/HISTORY.md"'
+setcfg "$CP" 'c["journal"]["prompts"]="notes/OTHER.md"'
+export D="$(bash "$S/doctor.sh" "$CP" 2>&1)"
+t "doctor: journal path changed without re-init -> block differs" 'printf "%s" "$D" | grep -q "block differs"'
+bash "$S/init.sh" "$CP" >/dev/null 2>&1
+t "re-init after a path change refreshes the block" 'grep -q "notes/OTHER.md" "$CP/CLAUDE.md" && ! grep -q "notes/HISTORY.md" "$CP/CLAUDE.md"'
+setcfg "$CP" 'c["journal"]["prompts"]=123'
+t "wrong-typed journal path -> default, same as the hooks" '[ "$(python3 "$ZOEY" paths "$CP/.claude/zoey-memory.json" | head -1)" = docs/memory/PROMPTS.md ]'
+t "block-check without a cfg arg still works (schema defaults)" 'python3 "$ZOEY" block-check "$R/CLAUDE.md" "$P/templates/CLAUDE.en.md"'
 
 echo
 echo "passed=$PASS failed=$FAIL"

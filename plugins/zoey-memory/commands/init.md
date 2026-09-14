@@ -42,7 +42,9 @@ rules in CLAUDE.md / AGENTS.md. If the repo already has another spec process (do
 ## 5. Commit
 
 Commit everything: `openspec/`, `.claude/zoey-memory.json`, `.claude/commands/` and `.claude/skills/`
-(created by openspec), `docs/memory/`, `CLAUDE.md`, `.gitignore`. Message: `Enable ZoeyMemory + OpenSpec`.
+(created by openspec), both journals (`journal.prompts` / `journal.sessions`, default `docs/memory/`),
+`CLAUDE.md`, `.gitignore`. Message: `Enable ZoeyMemory + OpenSpec`.
+If you change `journal.*` in step 2, re-run the init script afterwards: the CLAUDE.md block names those paths.
 This toolkit travels with git - that is how the other machine gets it. Do not push if `git.allowPush` is false.
 
 ## 6. Report briefly

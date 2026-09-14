@@ -6,6 +6,9 @@ Imported by lib/log_prompt.py and lib/session_start.py. Called as a CLI by the b
   zoey.py get <cfg> <dotted.key> [default]      print the value ('' if unset; booleans as true/false).
                                                  exit 2 if the config file is unreadable or invalid JSON.
   zoey.py validate <cfg>                         exit 0 valid, 2 invalid (reason on stderr).
+  zoey.py paths <cfg>                            print the prompts and sessions journal paths, one per
+                                                 line, resolved exactly as the hooks do (wrong type or
+                                                 missing/invalid config -> schema default).
   zoey.py lang <cfg|-> <i18n_dir> [requested]    print the resolved language code.
                                                  exit 1 (reason on stderr) if the requested/configured
                                                  language has no i18n file - never downgrades silently.
@@ -13,9 +16,12 @@ Imported by lib/log_prompt.py and lib/session_start.py. Called as a CLI by the b
   zoey.py init-config <template> <dst> <name> <lang>
                                                  write a fresh config from the template (doc keys stripped).
   zoey.py set-lang <cfg> <lang>                  set `language` in an existing config.
-  zoey.py block <claude_md> <template>           add or refresh the plugin-owned CLAUDE.md block.
+  zoey.py block <claude_md> <template> [cfg]     add or refresh the plugin-owned CLAUDE.md block.
                                                  prints added|refreshed|up-to-date; exit 3 = markers broken.
-  zoey.py block-check <claude_md> <template>     prints ok|differs|missing|broken; exit 0 only for ok.
+  zoey.py block-check <claude_md> <template> [cfg]
+                                                 prints ok|differs|missing|broken; exit 0 only for ok.
+      Both render {prompts} / {sessions} in the template from the config's journal paths
+      (schema defaults when [cfg] is omitted, missing or invalid).
 
 Python 3.6+ only, no third-party modules.
 """
@@ -172,10 +178,18 @@ def git_branch(root):
 
 # ---------------------------------------------------------------- CLAUDE.md block
 
-def block_status(claude_md, template, write):
-    """added | refreshed | up-to-date | broken. With write=False nothing is touched."""
+def render_block(text, cfg):
+    """Fill the path placeholders of a CLAUDE.<lang>.md template from the config.
+    Plain token replacement, not str.format: any other brace in the template stays literal."""
+    prompts, sessions = journal_paths(cfg)
+    return text.replace("{prompts}", prompts).replace("{sessions}", sessions)
+
+
+def block_status(claude_md, template, write, cfg=None):
+    """added | refreshed | up-to-date | broken. With write=False nothing is touched.
+    The template is rendered with the journal paths of `cfg` (schema defaults when None)."""
     src = read_text(claude_md) if os.path.exists(claude_md) else ""
-    new = read_text(template).strip()
+    new = render_block(read_text(template).strip(), cfg)
     if not new:
         return "broken"
     has_start, has_end = START in src, END in src
@@ -227,6 +241,10 @@ def main(argv):
         print(_fmt(v) if v is not None else default)
         return 0
 
+    if cmd == "paths":
+        print("\n".join(journal_paths(load_cfg(args[0])[0])))
+        return 0
+
     if cmd == "validate":
         cfg, err = load_cfg(args[0])
         if cfg is None:
@@ -274,13 +292,18 @@ def main(argv):
         write_json(args[0], cfg)
         return 0
 
+    if cmd in ("block", "block-check"):
+        # Optional 3rd arg: the repo config. Missing/invalid -> None -> schema default paths
+        # (init.sh aborts on an invalid config before it gets here; doctor reports it separately).
+        cfg = load_cfg(args[2])[0] if len(args) > 2 else None
+
     if cmd == "block":
-        st = block_status(args[0], args[1], write=True)
+        st = block_status(args[0], args[1], write=True, cfg=cfg)
         print(st)
         return 3 if st == "broken" else 0
 
     if cmd == "block-check":
-        st = block_status(args[0], args[1], write=False)
+        st = block_status(args[0], args[1], write=False, cfg=cfg)
         print({"added": "missing", "refreshed": "differs", "up-to-date": "ok", "broken": "broken"}[st])
         return 0 if st == "up-to-date" else 1
 
