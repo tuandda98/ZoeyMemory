@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Update all three tools on this machine: superpowers, ZoeyMemory, openspec CLI.
+# Update the tools on this machine: superpowers, ponytail, ZoeyMemory, openspec CLI.
 # If run inside a repo that has openspec/, also regenerates that repo's OpenSpec command files.
 # This is the ONLY script that talks to the network. Safe to re-run. Plugin updates need a Claude
 # Code restart (or /reload-plugins) to take effect.
@@ -17,6 +17,7 @@ claude plugin marketplace update 2>&1 | tail -3
 
 echo "# 2/4 plugins"
 claude plugin update superpowers@superpowers-marketplace 2>&1 | tail -1
+claude plugin update ponytail@ponytail 2>&1 | tail -1
 claude plugin update zoey-memory@zoey-memory 2>&1 | tail -1
 
 echo "# 3/4 openspec CLI"

@@ -1,11 +1,12 @@
 {
   "name": "zoey-memory",
-  "description": "ZoeyMemory: memory across sessions. Hooks log every user prompt to docs/memory/, load context at session start (recent prompts, last session note, open OpenSpec changes, git log), and auto-pull when safe. Installs superpowers as a dependency; /zoey-memory:init installs the openspec CLI. Run /zoey-memory:init in a new repo to enable.",
-  "version": "0.4.3",
+  "description": "ZoeyMemory: memory across sessions. Hooks log every user prompt to docs/memory/, load context at session start (recent prompts, last session note, open OpenSpec changes, git log), and auto-pull when safe. Installs superpowers and ponytail as dependencies; /zoey-memory:init installs the openspec CLI. Run /zoey-memory:init in a new repo to enable.",
+  "version": "0.5.0",
   "author": {
     "name": "Do Dao Anh Tuan"
   },
   "dependencies": [
-    { "name": "superpowers", "marketplace": "superpowers-marketplace" }
+    { "name": "superpowers", "marketplace": "superpowers-marketplace" },
+    { "name": "ponytail", "marketplace": "ponytail" }
   ]
 }

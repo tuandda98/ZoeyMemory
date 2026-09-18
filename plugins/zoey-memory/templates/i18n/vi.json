@@ -6,7 +6,7 @@
   "new_session": "\n## Phiên mới - {stamp} (nhánh `{branch}`, {source})\n",
 
   "ctx_title": "# Ngữ cảnh tự nạp đầu phiên (ZoeyMemory)",
-  "ctx_intro": "Đọc hết phần này TRƯỚC khi trả lời câu đầu tiên. Đây là việc đã diễn ra ở phiên trước và/hoặc Ở MÁY KIA - đừng hỏi lại thứ đã có câu trả lời ở đây, đừng đề xuất lại phương án đã bị loại. Phân vai: spec/quyết định -> OpenSpec (/opsx:*) - TDD/debug/verify/review -> superpowers - ký ức -> ZoeyMemory. Chi tiết trong CLAUDE.md.",
+  "ctx_intro": "Đọc hết phần này TRƯỚC khi trả lời câu đầu tiên. Đây là việc đã diễn ra ở phiên trước và/hoặc Ở MÁY KIA - đừng hỏi lại thứ đã có câu trả lời ở đây, đừng đề xuất lại phương án đã bị loại. Phân vai: spec/quyết định -> OpenSpec (/opsx:*) - TDD/debug/verify/review -> superpowers - thực thi /opsx:apply -> ponytail (code tối thiểu) - ký ức -> ZoeyMemory. Chi tiết trong CLAUDE.md.",
   "cfg_invalid": "CẢNH BÁO: repo này đã bật ZoeyMemory nhưng không đọc được `{path}` ({reason}). Nhật ký, đồng bộ git và nạp ngữ cảnh đang TẮT cho tới khi sửa xong - báo chủ dự án, rồi chạy `/zoey-memory:doctor`.",
   "render_failed": "CẢNH BÁO: ZoeyMemory không dựng được ngữ cảnh đầu phiên ({error}). Nhật ký và cấu hình không bị đụng; chạy `/zoey-memory:doctor`.",
 
