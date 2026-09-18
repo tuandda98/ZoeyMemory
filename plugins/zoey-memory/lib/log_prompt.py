@@ -5,6 +5,8 @@ Usage: log_prompt.py <root> <cfg> <i18n_dir>     (hook JSON on stdin)
 
 - SessionStart JSON  -> writes the "new session" marker line
 - UserPromptSubmit   -> writes "- [HH:MM] <prompt>" (truncated, machine-generated prompts skipped)
+                        and prints a one-line "pick a skill" reminder to stdout, which Claude Code
+                        adds to the context (context.skillReminder=false turns it off)
 - missing/invalid config, journal disabled, or any error -> does nothing.
 Always exits 0: a broken journal must never block a working session.
 """
@@ -22,8 +24,6 @@ def main():
     cfg, _err = zoey.load_cfg(cfg_path)
     if cfg is None:
         return  # missing or invalid: the doctor reports invalid configs; hooks stay silent
-    if zoey.cfg_value(cfg, "journal.enabled") is False:
-        return
     try:
         data = json.load(sys.stdin)
     except Exception:
@@ -33,9 +33,14 @@ def main():
 
     lang, _ = zoey.resolve_lang(cfg, i18n_dir)
     t = zoey.I18n(i18n_dir, lang or "en")
+    event = data.get("hook_event_name", "")
+    if (event == "UserPromptSubmit" and zoey.cfg_value(cfg, "context.skillReminder")
+            and not zoey.is_noise(str(data.get("prompt", "")))):
+        print(t.get("skill_reminder"))
+    if zoey.cfg_value(cfg, "journal.enabled") is False:
+        return
     zoey.apply_timezone(cfg)
     now = datetime.datetime.now()
-    event = data.get("hook_event_name", "")
 
     if event == "SessionStart":
         line = t.get("new_session", stamp=now.strftime("%Y-%m-%d %H:%M"),

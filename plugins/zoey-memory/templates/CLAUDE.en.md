@@ -10,6 +10,22 @@ Four tools, one job each, no overlap:
 | Code quality | **superpowers** | Implementing: `test-driven-development`. Hitting a bug: `systematic-debugging`. Before claiming done: `verification-before-completion`. Feature complete: `requesting-code-review`. |
 | Executing (`/opsx:apply`) | **ponytail** | Before writing code for each task in `tasks.md`, run the `ponytail` skill and stop at the first rung that holds: not needed -> already in the codebase -> stdlib -> native platform -> installed dependency -> one line -> only then the minimum that works. Never cut validation, error handling, security or accessibility. Runs together with TDD, it does not replace it. |
 
+Picking a skill (check this tree on EVERY prompt and invoke the skill BEFORE answering; several branches match -> invoke them all):
+```
+Vague idea, unclear for whom / why    -> interview-me, then /opsx:explore
+New idea/feature worth remembering    -> /opsx:explore -> /opsx:propose <name>
+Executing an existing change          -> /opsx:apply <name> + ponytail + test-driven-development
+  UI, page, component                -> + frontend-ui-engineering
+  API, endpoint, module boundary     -> + api-and-interface-design
+  user input, auth, stored data      -> + security-and-hardening
+Bug, failing test, wrong behavior     -> systematic-debugging
+Slow, Core Web Vitals, N+1            -> performance-optimization
+About to say "done"                   -> verification-before-completion
+Feature complete, before merge        -> requesting-code-review
+Getting ready for production          -> shipping-and-launch (deploying still needs a yes, see `forbidden`)
+Anything else                         -> scan the skill list the system provides and invoke whatever matches
+```
+
 Boundaries:
 - Do NOT use `superpowers:brainstorming`, `writing-plans`, or `executing-plans` - OpenSpec owns that. To discuss an idea, use `/opsx:explore`.
 - Small single-file fixes with no reasoning worth keeping: just do them, still with TDD + verification, no proposal needed.

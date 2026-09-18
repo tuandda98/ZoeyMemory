@@ -85,14 +85,18 @@ export OUT="$(bash "$S/init.sh" "$T/xx" 2>&1)"
 t "broken block (start without end) is reported, file untouched" 'printf "%s" "$OUT" | grep -q broken && [ "$(cat "$T/xx/CLAUDE.md")" = "$(printf "<!-- zoey-memory:start -->\nhalf")" ]'
 
 echo; echo "# journal hook"
-prompt "$R" "hello there"
+export OUT="$(prompt "$R" "hello there")"
+t "skill reminder printed on a real prompt" 'printf "%s" "$OUT" | grep -q "Picking a skill"'
 t "prompt journaled" 'grep -q "\] hello there" "$R/docs/memory/PROMPTS.md"'
-prompt "$R" "<system-reminder>noise</system-reminder>"
+export OUT="$(prompt "$R" "<system-reminder>noise</system-reminder>")"
+t "no skill reminder for machine noise" '[ -z "$OUT" ]'
 t "machine noise not journaled" '! grep -q noise "$R/docs/memory/PROMPTS.md"'
 python3 -c 'print("x"*1200000, end="")' > "$T/big.txt"; prompt "$R" "$(cat "$T/big.txt")"
 t "1.2 MB prompt truncated to 600 chars, hook survives" '[ "$(grep -c "xxxxxxxxxx…$" "$R/docs/memory/PROMPTS.md")" = 1 ] && [ "$(grep "xxxxxxxxxx…$" "$R/docs/memory/PROMPTS.md" | wc -c | tr -d " ")" -lt 700 ]'
 setcfg "$R" 'c["journal"]["enabled"]=False'; prompt "$R" "MUST-NOT-APPEAR"
 t "journal.enabled=false -> no write" '! grep -q MUST-NOT-APPEAR "$R/docs/memory/PROMPTS.md"'
+setcfg "$R" 'c["context"]["skillReminder"]=False'; export OUT="$(prompt "$R" "quiet please")"
+t "context.skillReminder=false -> no reminder" '[ -z "$OUT" ]'
 git -C "$R" checkout -q -- .claude/zoey-memory.json
 
 echo; echo "# sync + marker order"

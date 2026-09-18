@@ -138,6 +138,16 @@ else
     || warn "ponytail $pt_ver has no skills/ponytail - update templates/CLAUDE.<lang>.md and this check in doctor.sh"
 fi
 
+# ---- 4c. agent-skills ----
+echo; echo "## agent-skills"
+# Skills from addyosmani/agent-skills that the CLAUDE.md tree routes to. Global or per-repo install both count.
+missing=""
+for s in frontend-ui-engineering api-and-interface-design security-and-hardening performance-optimization shipping-and-launch interview-me; do
+  [ -f "$HOME/.claude/skills/$s/SKILL.md" ] || [ -f ".claude/skills/$s/SKILL.md" ] || missing="$missing $s"
+done
+if [ -z "$missing" ]; then ok "all agent-skills referenced by the CLAUDE.md tree are installed"
+else warn "agent-skills missing:$missing (npx skills add addyosmani/agent-skills -g -a claude-code --copy -y -s <name>, or re-run setup.sh)"; fi
+
 # ---- 5. CLAUDE.md block ----
 echo; echo "## CLAUDE.md"
 BLOCK_TPL="$TPL/CLAUDE.$LANG_CODE.md"; [ -f "$BLOCK_TPL" ] || BLOCK_TPL="$TPL/CLAUDE.en.md"

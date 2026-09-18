@@ -145,6 +145,22 @@ leave a machine   ──►  /zoey-memory:handoff            session note, WIP c
 Small single-file fixes with no reasoning worth keeping: skip explore/propose and just ask; TDD and
 verification still apply.
 
+
+### Claude picks the skill for you
+
+You do not have to name skills. The CLAUDE.md block carries a routing tree ("vague idea ->
+`interview-me`", "bug -> `systematic-debugging`", "UI work -> `frontend-ui-engineering`", ...), and
+the prompt hook adds one line to every prompt telling Claude to walk that tree and invoke every
+matching skill before answering. Turn the line off with `context.skillReminder: false`.
+
+Besides OpenSpec, superpowers and ponytail, the tree routes to six skills from
+[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) that fill gaps without
+overlapping: `interview-me`, `frontend-ui-engineering`, `api-and-interface-design`,
+`security-and-hardening`, `performance-optimization`, `shipping-and-launch`. `setup.sh` installs
+them to `~/.claude/skills` (plus their shared checklists to `~/.claude/references`); `doctor` warns
+when one is missing. The rest of that collection is left out on purpose: its spec, planning, TDD,
+debugging and review skills would compete with OpenSpec and superpowers.
+
 ---
 
 ## Commands

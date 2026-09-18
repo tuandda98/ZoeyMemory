@@ -10,7 +10,7 @@
       "name": "zoey-memory",
       "source": "./plugins/zoey-memory",
       "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Pulls in superpowers and ponytail as dependencies; specs go to OpenSpec (CLI installed by /zoey-memory:init).",
-      "version": "0.5.0"
+      "version": "0.6.0"
     }
   ]
 }
