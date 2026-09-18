@@ -34,5 +34,7 @@
   "no_tasks": "no tasks yet",
   "empty": "empty",
 
+  "skill_reminder": "ZoeyMemory: before answering, walk the \"Picking a skill\" tree in CLAUDE.md and invoke every skill that matches this prompt (via the Skill tool) - if nothing matches, just answer.",
+
   "git_title": "## Git - branch `{branch}`"
 }

@@ -17,9 +17,10 @@
   },
 
   "context": {
-    "_": "Loaded into context at session start: the last N prompts + latest session note + open OpenSpec changes + git log.",
+    "_": "Loaded into context at session start: the last N prompts + latest session note + open OpenSpec changes + git log. skillReminder: on every prompt, add one line telling Claude to pick a skill from the CLAUDE.md tree first.",
     "enabled": true,
-    "recentPrompts": 30
+    "recentPrompts": 30,
+    "skillReminder": true
   },
 
   "git": {

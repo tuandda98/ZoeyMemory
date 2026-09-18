@@ -36,7 +36,7 @@ DEFAULTS = {
     "language": "en",
     "timezone": "",
     "journal": {"enabled": True, "prompts": "docs/memory/PROMPTS.md", "sessions": "docs/memory/SESSIONS.md"},
-    "context": {"enabled": True, "recentPrompts": 30},
+    "context": {"enabled": True, "recentPrompts": 30, "skillReminder": True},
     "git": {"autoPull": True, "allowCommit": True, "allowPush": True, "workingBranch": "main"},
 }
 

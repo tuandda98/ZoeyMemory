@@ -34,5 +34,7 @@
   "no_tasks": "chưa có task",
   "empty": "trống",
 
+  "skill_reminder": "ZoeyMemory: trước khi trả lời, dò cây \"Chọn skill\" trong CLAUDE.md và gọi mọi skill khớp với câu này (bằng Skill tool) - không khớp gì thì trả lời thẳng.",
+
   "git_title": "## Git - nhánh `{branch}`"
 }
