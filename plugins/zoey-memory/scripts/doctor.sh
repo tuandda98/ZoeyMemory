@@ -106,14 +106,7 @@ fi
 
 # ---- 4. superpowers ----
 echo; echo "## superpowers"
-sp="$(claude plugin list --json 2>/dev/null | python3 -c '
-import json,sys
-try: items=json.load(sys.stdin)
-except Exception: items=[]
-for p in items if isinstance(items,list) else []:
-    if str(p.get("id","")).startswith("superpowers@"):
-        print("%s\t%s\t%s" % (p.get("version","?"), "enabled" if p.get("enabled") else "disabled", p.get("installPath",""))); break
-' 2>/dev/null)"
+sp="$(zoey_plugin_info superpowers)"
 if [ -z "$sp" ]; then
   warn "superpowers not installed - TDD/debugging/verification/review skills unavailable (claude plugin marketplace add obra/superpowers-marketplace && claude plugin install superpowers@superpowers-marketplace)"
 else
@@ -130,6 +123,19 @@ else
   else
     warn "cannot find superpowers skills at $sp_path/skills - reinstall superpowers"
   fi
+fi
+
+# ---- 4b. ponytail ----
+echo; echo "## ponytail"
+pt="$(zoey_plugin_info ponytail)"
+if [ -z "$pt" ]; then
+  warn "ponytail not installed - /opsx:apply runs without the laziness ladder (claude plugin marketplace add DietrichGebert/ponytail && claude plugin install ponytail@ponytail)"
+else
+  pt_ver="$(printf '%s' "$pt" | cut -f1)"; pt_state="$(printf '%s' "$pt" | cut -f2)"; pt_path="$(printf '%s' "$pt" | cut -f3)"
+  [ "$pt_state" = "enabled" ] && ok "ponytail $pt_ver enabled" || warn "ponytail $pt_ver installed but DISABLED (claude plugin enable ponytail@ponytail)"
+  # The CLAUDE.md block names the `ponytail` skill. If upstream renames it, this catches it.
+  [ -d "$pt_path/skills/ponytail" ] && ok "skill 'ponytail' referenced by the CLAUDE.md block exists in ponytail $pt_ver" \
+    || warn "ponytail $pt_ver has no skills/ponytail - update templates/CLAUDE.<lang>.md and this check in doctor.sh"
 fi
 
 # ---- 5. CLAUDE.md block ----

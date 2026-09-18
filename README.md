@@ -43,10 +43,11 @@ Three tools, one job each, no overlap:
 | Memory across sessions and machines | **ZoeyMemory** (this repo) | `plugins/zoey-memory/` |
 | Specs, design, reasoning behind decisions, dated history | **OpenSpec** | [Fission-AI/openspec](https://github.com/Fission-AI/openspec) |
 | TDD, systematic debugging, verification before "done", code review | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) |
+| Minimal code while executing `/opsx:apply` (YAGNI, stdlib first, no unrequested abstractions) | **ponytail** | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) |
 
-ZoeyMemory declares superpowers as a **plugin dependency** and installs the OpenSpec CLI on first
-use, so you never install the other two by hand. A block that ZoeyMemory appends to your repo's
-`CLAUDE.md` tells Claude which tool owns which job, so the three never fight (for example,
+ZoeyMemory declares superpowers and ponytail as **plugin dependencies** and installs the OpenSpec CLI on first
+use, so you never install the others by hand. A block that ZoeyMemory appends to your repo's
+`CLAUDE.md` tells Claude which tool owns which job, so they never fight (for example,
 superpowers' own brainstorming skill is switched off in favor of OpenSpec's `/opsx:explore`).
 
 ```
@@ -72,13 +73,14 @@ Requirements: Claude Code 2.1.242 or later, git, python3 (ships with macOS), Nod
 OpenSpec CLI.
 
 ```bash
-claude plugin marketplace add obra/superpowers-marketplace   # once; makes the dependency resolvable
+claude plugin marketplace add obra/superpowers-marketplace   # once; makes the dependencies resolvable
+claude plugin marketplace add DietrichGebert/ponytail
 claude plugin marketplace add tuandda98/ZoeyMemory
-claude plugin install zoey-memory@zoey-memory                 # installs zoey-memory + superpowers
+claude plugin install zoey-memory@zoey-memory                 # installs zoey-memory + superpowers + ponytail
 ```
 
-The first line is needed because Claude Code never auto-adds a marketplace you have not reviewed;
-once it is known, the dependency resolves on its own.
+The first two lines are needed because Claude Code never auto-adds a marketplace you have not reviewed;
+once they are known, the dependencies resolve on its own.
 
 One-liner that does the same and installs the OpenSpec CLI too (safe to re-run):
 
@@ -89,13 +91,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/tuandda98/ZoeyMemory/main/se
 Verify:
 
 ```bash
-claude plugin list        # zoey-memory and superpowers both "enabled"
+claude plugin list        # zoey-memory, superpowers and ponytail all "enabled"
 openspec --version        # after setup.sh, or after the first /zoey-memory:init
 ```
 
 Because of the dependency, `claude plugin disable superpowers@...` is refused while ZoeyMemory is
 enabled; Claude Code prints the chained command to disable both. `claude plugin uninstall
-zoey-memory --prune` removes superpowers too unless you installed it yourself.
+zoey-memory --prune` removes superpowers and ponytail too unless you installed them yourself.
 
 ---
 
@@ -135,7 +137,7 @@ Everything created is committed, so the second machine just clones the repo - no
 open a machine    ──►  hook pulls + loads context. Switched machines? also /zoey-memory:start
 think             ──►  /opsx:explore <idea>            talk it through, no files written
 decide            ──►  /opsx:propose <name>            proposal.md, design.md, specs/, tasks.md
-build             ──►  /opsx:apply <name>              superpowers TDD + verification kick in
+build             ──►  /opsx:apply <name>              ponytail keeps code minimal, superpowers TDD + verification
 close             ──►  /opsx:archive <name>            dated history, living specs updated
 leave a machine   ──►  /zoey-memory:handoff            session note, WIP commit, push
 ```
@@ -154,8 +156,8 @@ All commands are `/zoey-memory:<name>`.
 | `init [code]` | once per repo | Enable ZoeyMemory + OpenSpec here (see above). Optional language code. Re-run with another code to switch languages. Unknown code or invalid existing config: aborts before writing anything. |
 | `start` | start of day, especially after switching machines | Fetch and move to the working branch; reinstall dependencies if the lockfile changed; summarize what the other machine did from `git log` and both journals; list open OpenSpec changes and the next task; check every item in `outsideGit` (env files, migrations, keys) and ask for a manual transfer if something is missing. |
 | `handoff` | before leaving a machine | Tick finished tasks in `openspec/changes/<name>/tasks.md`; append one entry to `docs/memory/SESSIONS.md` (in progress / why we stopped / waiting on whom / what the other machine needs to know); commit even unfinished work with a `WIP:` message; push; remind about things outside git. Never merges or deploys. |
-| `doctor` | after updating any of the three tools, or when a hook seems silent | Read-only, offline health check: config valid, language has a translation file, journals present and non-empty, git upstream set, nothing git-ignored, OpenSpec CLI + `/opsx:*` commands + language line, superpowers enabled and still has every skill the CLAUDE.md block names, CLAUDE.md block matches the template. Claude fixes what is safe and hands you the command for the rest. |
-| `update` | now and then | Update marketplaces, superpowers, ZoeyMemory and the OpenSpec CLI; run `openspec update` in this repo to regenerate its command files; then run the doctor. The only thing that touches the network. |
+| `doctor` | after updating any of the three tools, or when a hook seems silent | Read-only, offline health check: config valid, language has a translation file, journals present and non-empty, git upstream set, nothing git-ignored, OpenSpec CLI + `/opsx:*` commands + language line, superpowers and ponytail enabled and still have every skill the CLAUDE.md block names, CLAUDE.md block matches the template. Claude fixes what is safe and hands you the command for the rest. |
+| `update` | now and then | Update marketplaces, superpowers, ponytail, ZoeyMemory and the OpenSpec CLI; run `openspec update` in this repo to regenerate its command files; then run the doctor. The only thing that touches the network. |
 
 The mechanical parts are plain scripts you can run without Claude:
 `scripts/init.sh [--language <code>] [repo]`, `scripts/doctor.sh [repo]`, `scripts/update.sh`.
@@ -246,14 +248,14 @@ ZoeyMemory depends on OpenSpec and superpowers loosely, on purpose:
 
 - The session hook reads `openspec/changes/*/tasks.md` from the **filesystem**, never the CLI. A CLI
   change cannot break session start; at worst the section says "no open changes".
-- superpowers is referenced only **by skill name** in the CLAUDE.md block. A renamed skill makes a
+- superpowers and ponytail are referenced only **by skill name** in the CLAUDE.md block. A renamed skill makes a
   rule stale; nothing breaks.
 
 | Upstream change | Effect on you | Caught by |
 |---|---|---|
 | New OpenSpec CLI | Generated `.claude/commands/opsx/*` in your repo are outdated | `update` runs `openspec update`; `doctor` checks the four commands exist |
 | OpenSpec renames `/opsx:*` | CLAUDE.md block and context hint name old commands | `doctor` (missing commands) - then edit `templates/i18n/*.json` and `CLAUDE.<lang>.md` |
-| superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor` looks the install path up with `claude plugin list --json` and checks each skill |
+| superpowers or ponytail renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor` looks the install path up with `claude plugin list --json` and checks each skill |
 | ZoeyMemory template changes | Your repo's CLAUDE.md block has the old wording | `doctor` diffs the block; `init` refreshes it |
 | You change `journal.*` paths | The CLAUDE.md block still names the old paths | `doctor` diffs against the template rendered with your config; `init` refreshes it |
 
@@ -286,7 +288,7 @@ after that. Auto-update is off by default for non-Anthropic marketplaces; enable
 setup.sh                            new machine: marketplaces + plugins + openspec CLI
 tests/run.sh                        regression suite (41 checks, throwaway repos, no network)
 plugins/zoey-memory/
-  .claude-plugin/plugin.json        plugin manifest, declares superpowers as a dependency
+  .claude-plugin/plugin.json        plugin manifest, declares superpowers and ponytail as dependencies
   hooks/hooks.json                  SessionStart -> session-start.sh, UserPromptSubmit -> log-prompt.sh
   hooks/*.sh                        thin bash: git sync, then call into lib/
   lib/common.sh                     repo-root resolution, git detection, command watchdog
@@ -343,7 +345,7 @@ interpolated into code - rendered context contains backticks and `<name>` that m
 ## FAQ
 
 **Do I need to install OpenSpec and superpowers myself?**
-No. superpowers is a declared dependency (installed with the plugin once its marketplace is
+No. superpowers and ponytail are declared dependencies (installed with the plugin once their marketplaces are
 added); the OpenSpec CLI is installed by `/zoey-memory:init` or `setup.sh`.
 
 **Do I enable it every session?**
@@ -362,8 +364,8 @@ CLAUDE.md block's quality rules have no skills to trigger. Both are degraded, no
 decision that did not go through OpenSpec: a `> ` line under the prompt in `PROMPTS.md`.
 
 **How do I brainstorm, design, implement?**
-`/opsx:explore` to think, `/opsx:propose` to write it down, `/opsx:apply` to build (superpowers
-handles tests and verification), `/opsx:archive` to close.
+`/opsx:explore` to think, `/opsx:propose` to write it down, `/opsx:apply` to build (ponytail
+keeps the code minimal, superpowers handles tests and verification), `/opsx:archive` to close.
 
 **Does the plugin ever push, merge or deploy?**
 Never on its own. Only `/zoey-memory:handoff` commits and pushes, and only when the config allows.

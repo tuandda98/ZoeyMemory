@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# New machine: install all three - superpowers + ZoeyMemory + openspec CLI. Safe to re-run.
+# New machine: install superpowers + ponytail + ZoeyMemory + openspec CLI. Safe to re-run.
 #
 # Usage: bash setup.sh [ZoeyMemory marketplace source]
 #   default source: tuandda98/ZoeyMemory (GitHub). Not pushed yet? Pass a local path, e.g.:
@@ -10,15 +10,19 @@ ZOEY_SRC="${1:-tuandda98/ZoeyMemory}"
 
 command -v claude >/dev/null 2>&1 || { echo "ERROR: Claude Code CLI not found"; exit 1; }
 
-echo "# 1/3 superpowers"
+echo "# 1/4 superpowers"
 claude plugin marketplace add obra/superpowers-marketplace 2>&1 | tail -1
 claude plugin install superpowers@superpowers-marketplace 2>&1 | tail -1
 
-echo "# 2/3 ZoeyMemory ($ZOEY_SRC)"
+echo "# 2/4 ponytail"
+claude plugin marketplace add DietrichGebert/ponytail 2>&1 | tail -1
+claude plugin install ponytail@ponytail 2>&1 | tail -1
+
+echo "# 3/4 ZoeyMemory ($ZOEY_SRC)"
 claude plugin marketplace add "$ZOEY_SRC" 2>&1 | tail -1
 claude plugin install zoey-memory@zoey-memory 2>&1 | tail -1
 
-echo "# 3/3 openspec CLI"
+echo "# 4/4 openspec CLI"
 if command -v openspec >/dev/null 2>&1; then
   echo "OK    openspec $(openspec --version) already installed"
 elif command -v npm >/dev/null 2>&1; then
@@ -28,6 +32,6 @@ else
 fi
 
 echo
-claude plugin list 2>/dev/null | grep -E "superpowers@|zoey-memory@" -A3
+claude plugin list 2>/dev/null | grep -E "superpowers@|ponytail@|zoey-memory@" -A3
 echo
 echo "Done. Open a repo and run /zoey-memory:init to enable it there."

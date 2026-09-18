@@ -133,20 +133,17 @@ if grep -qx '.claude/settings.local.json' .gitignore; then skip ".gitignore alre
   printf '.claude/settings.local.json\n' >> .gitignore; ok ".gitignore += .claude/settings.local.json"
 fi
 
-# 8. superpowers installed and enabled?
-sp="$(claude plugin list --json 2>/dev/null | python3 -c '
-import json,sys
-try: items=json.load(sys.stdin)
-except Exception: items=[]
-for p in items if isinstance(items,list) else []:
-    if str(p.get("id","")).startswith("superpowers@"):
-        print("%s\t%s" % (p.get("version","?"), "enabled" if p.get("enabled") else "disabled")); break
-' 2>/dev/null)"
-case "$sp" in
-  *enabled)  ok "superpowers ${sp%%	*} enabled" ;;
-  *disabled) warn "superpowers ${sp%%	*} installed but DISABLED (claude plugin enable superpowers@superpowers-marketplace)" ;;
-  *)         warn "superpowers NOT installed. Install: claude plugin marketplace add obra/superpowers-marketplace && claude plugin install superpowers@superpowers-marketplace" ;;
-esac
+# 8. superpowers + ponytail installed and enabled?
+check_plugin() {  # <name> <marketplace> <marketplace source>
+  local info; info="$(zoey_plugin_info "$1")"
+  case "$(printf '%s' "$info" | cut -f2)" in
+    enabled)  ok "$1 ${info%%	*} enabled" ;;
+    disabled) warn "$1 ${info%%	*} installed but DISABLED (claude plugin enable $1@$2)" ;;
+    *)        warn "$1 NOT installed. Install: claude plugin marketplace add $3 && claude plugin install $1@$2" ;;
+  esac
+}
+check_plugin superpowers superpowers-marketplace obra/superpowers-marketplace
+check_plugin ponytail ponytail DietrichGebert/ponytail
 
 echo
 echo "Done. Hooks take effect from the next session (or run /reload-plugins). Commit the files above so the other machine gets them."

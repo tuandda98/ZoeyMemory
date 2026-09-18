@@ -70,7 +70,7 @@ t "init creates config/journals/block" '[ -s "$R/.claude/zoey-memory.json" ] && 
 t "init sets language en" '[ "$(python3 "$ZOEY" get "$R/.claude/zoey-memory.json" language)" = en ]'
 t "block rendered with the default journal paths, no raw placeholder left" 'grep -q "docs/memory/PROMPTS.md" "$R/CLAUDE.md" && grep -q "docs/memory/SESSIONS.md" "$R/CLAUDE.md" && ! grep -q "{prompts}\|{sessions}" "$R/CLAUDE.md"'
 export OUT="$(bash "$S/init.sh" "$R" 2>&1)"
-t "init is idempotent (no OK lines except tool checks)" '! printf "%s" "$OUT" | grep -E "^OK " | grep -vE "openspec CLI|superpowers" | grep -q .'
+t "init is idempotent (no OK lines except tool checks)" '! printf "%s" "$OUT" | grep -E "^OK " | grep -vE "openspec CLI|superpowers|ponytail" | grep -q .'
 t "--language without value aborts (no infinite loop)" '! (cd "$T" && bash "$S/init.sh" --language)'
 mkrepo "$T/xx"
 t "--language xx aborts before writing anything" '! bash "$S/init.sh" --language xx "$T/xx" && [ ! -e "$T/xx/.claude/zoey-memory.json" ] && [ ! -e "$T/xx/CLAUDE.md" ]'

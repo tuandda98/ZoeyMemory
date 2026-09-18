@@ -1,16 +1,16 @@
 {
   "name": "zoey-memory",
-  "description": "ZoeyMemory: memory across Claude Code sessions and machines. Pairs with OpenSpec (specs and decisions) and superpowers (code quality). Shared across all of Tuan's projects.",
+  "description": "ZoeyMemory: memory across Claude Code sessions and machines. Pairs with OpenSpec (specs and decisions) and superpowers (code quality) and ponytail (minimal code when executing). Shared across all of Tuan's projects.",
   "owner": {
     "name": "Do Dao Anh Tuan"
   },
-  "allowCrossMarketplaceDependenciesOn": ["superpowers-marketplace"],
+  "allowCrossMarketplaceDependenciesOn": ["superpowers-marketplace", "ponytail"],
   "plugins": [
     {
       "name": "zoey-memory",
       "source": "./plugins/zoey-memory",
-      "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Pulls in superpowers as a dependency; specs go to OpenSpec (CLI installed by /zoey-memory:init).",
-      "version": "0.4.3"
+      "description": "ZoeyMemory: automatic prompt journal, session-start context loading, two-machine git sync. Pulls in superpowers and ponytail as dependencies; specs go to OpenSpec (CLI installed by /zoey-memory:init).",
+      "version": "0.5.0"
     }
   ]
 }

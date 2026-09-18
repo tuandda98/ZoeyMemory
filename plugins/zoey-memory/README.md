@@ -1,13 +1,14 @@
 # ZoeyMemory - memory across sessions and machines
 
 This plugin solves exactly one problem: **Claude's memory does not travel across sessions or
-machines.** It does not write specs and it does not do TDD - those jobs go to OpenSpec and superpowers.
+machines.** It does not write specs and it does not do TDD - those jobs go to OpenSpec, superpowers and ponytail.
 
 | Job | Owner | What you use |
 |---|---|---|
 | Memory: what was asked, what is in progress, what the other machine did | **ZoeyMemory** (this plugin) | 2 hooks + 5 commands |
 | Specs, design, reasoning behind decisions, dated history | **OpenSpec** | `/opsx:explore` `propose` `apply` `archive` |
 | TDD, systematic debugging, verification before claiming done, code review | **superpowers** | skills that trigger themselves |
+| Minimal code while executing `/opsx:apply` | **ponytail** | `ponytail` skill (laziness ladder) |
 
 ## What is inside
 
@@ -75,7 +76,7 @@ ZoeyMemory depends on the two loosely, on purpose:
 - The hook reads `openspec/changes/*/tasks.md` from the **filesystem**, never the CLI, so a CLI
   change cannot break session start. If OpenSpec moved its folders, the section would just say
   "no open changes".
-- superpowers is referenced only **by skill name in the CLAUDE.md block**. If a skill is renamed,
+- superpowers and ponytail are referenced only **by skill name in the CLAUDE.md block**. If a skill is renamed,
   the rule goes stale but nothing breaks.
 
 What can drift, and what catches it:
@@ -84,7 +85,7 @@ What can drift, and what catches it:
 |---|---|---|
 | New openspec CLI | `.claude/commands/opsx/*` and `.claude/skills/openspec-*` in your repo are outdated | `update.sh` runs `openspec update`; `doctor.sh` checks the four commands exist |
 | OpenSpec renames `/opsx:*` | CLAUDE.md block and context hint point to old names | `doctor.sh` (missing commands) - then edit `templates/i18n/*.json` and `CLAUDE.<lang>.md` |
-| superpowers renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor.sh` looks the install path up with `claude plugin list --json` and checks each skill |
+| superpowers or ponytail renames a skill | CLAUDE.md block names a skill that no longer exists | `doctor.sh` looks the install path up with `claude plugin list --json` and checks each skill |
 | ZoeyMemory template changes | Your repo's CLAUDE.md block is the old wording | `doctor.sh` diffs the block; `init.sh` refreshes it |
 | You change `journal.prompts` / `journal.sessions` | The CLAUDE.md block still names the old paths (it is rendered from `{prompts}` / `{sessions}`) | `doctor.sh` diffs the block against the template rendered with your config; `init.sh` refreshes it |
 

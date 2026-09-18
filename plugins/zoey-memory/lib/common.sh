@@ -46,3 +46,16 @@ zoey_run_limited() {
   rc=$?
   return $rc
 }
+
+# Look up an installed Claude Code plugin by name.
+#   zoey_plugin_info <name>  ->  "<version>\t<enabled|disabled>\t<installPath>", or nothing if absent
+zoey_plugin_info() {
+  claude plugin list --json 2>/dev/null | python3 -c '
+import json,sys
+try: items=json.load(sys.stdin)
+except Exception: items=[]
+for p in items if isinstance(items,list) else []:
+    if str(p.get("id","")).startswith(sys.argv[1]+"@"):
+        print("%s\t%s\t%s" % (p.get("version","?"), "enabled" if p.get("enabled") else "disabled", p.get("installPath",""))); break
+' "$1" 2>/dev/null
+}

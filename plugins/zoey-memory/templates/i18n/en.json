@@ -6,7 +6,7 @@
   "new_session": "\n## New session - {stamp} (branch `{branch}`, {source})\n",
 
   "ctx_title": "# Context auto-loaded at session start (ZoeyMemory)",
-  "ctx_intro": "Read all of this BEFORE answering the first prompt. It is what happened in the previous session and/or ON THE OTHER MACHINE - do not re-ask what is already answered here, do not re-propose options already rejected. Division of labor: specs/decisions -> OpenSpec (/opsx:*) - TDD/debugging/verification/review -> superpowers - memory -> ZoeyMemory. Details in CLAUDE.md.",
+  "ctx_intro": "Read all of this BEFORE answering the first prompt. It is what happened in the previous session and/or ON THE OTHER MACHINE - do not re-ask what is already answered here, do not re-propose options already rejected. Division of labor: specs/decisions -> OpenSpec (/opsx:*) - TDD/debugging/verification/review -> superpowers - executing /opsx:apply -> ponytail (minimal code) - memory -> ZoeyMemory. Details in CLAUDE.md.",
   "cfg_invalid": "WARNING: ZoeyMemory is enabled here but `{path}` could not be read ({reason}). Journaling, git sync and context loading are OFF until it is fixed - tell the user, then run `/zoey-memory:doctor`.",
   "render_failed": "WARNING: ZoeyMemory could not render the session context ({error}). Journals and config are untouched; run `/zoey-memory:doctor`.",
 
